@@ -10,12 +10,12 @@ range()
 http://pythoncentral.io/pythons-range-function-explained/
 
 
-future topics:    
+Look further into...       
 list comprehension    
 unpacking argument lists
-
 useful things to remember (didn't memorize yet)   
 del keyword   
 packing + unpacking   
 sets    
 dictionaries    
+import
