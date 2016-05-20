@@ -19,3 +19,4 @@ packing + unpacking
 sets    
 dictionaries    
 import
+exec  http://lucumr.pocoo.org/2011/2/1/exec-in-python/
