@@ -9,6 +9,8 @@ https://www.python.org/dev/peps/pep-0008/
 range()   
 http://pythoncentral.io/pythons-range-function-explained/
 
+str() vs repr()   
+https://www.youtube.com/watch?v=5cvM-crlDvg
 
 Look further into...       
 list comprehension    
