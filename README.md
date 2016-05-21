@@ -24,4 +24,10 @@ import
 exec  http://lucumr.pocoo.org/2011/2/1/exec-in-python/
 dir()   
 str.format()    
-'with' on file objects
+'with' on file objects    
+isatty(), truncate()    
+
+with open(...) as var:    
+.....
+
+
