@@ -31,3 +31,8 @@ with open(...) as var:
 .....
 
 .py files are modules/scripts
+
+try
+except
+else
+finally
