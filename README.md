@@ -30,4 +30,4 @@ isatty(), truncate()
 with open(...) as var:    
 .....
 
-
+.py files are modules
