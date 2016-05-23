@@ -1,12 +1,9 @@
 # Learn Python      
 
-Python Tutorial Notes(in progress)      
+Python Tutorial Notes (in progress)      
 https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing
 
-lambda    
-http://www.secnetix.de/olli/Python/lambda_functions.hawk
-
-PEP8    
+PEP8 (python style guide)          
 https://www.python.org/dev/peps/pep-0008/
 
 range()   
