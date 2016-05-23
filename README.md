@@ -1,6 +1,6 @@
 # Learn Python      
 
-Python Tutorial Notes       
+Python Tutorial Notes(in progress)      
 https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing
 
 lambda    
