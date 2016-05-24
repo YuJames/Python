@@ -38,3 +38,10 @@ else
 finally
     
 nonlocal
+
+shallow & deep copy     
+http://stackoverflow.com/questions/19068707/slicing-operation-give-deep-copy-or-shallow-copy
+
+side effects        
+https://docs.python.org/3.5/howto/functional.html
+
