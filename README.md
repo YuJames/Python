@@ -21,9 +21,7 @@ http://lucumr.pocoo.org/2011/2/1/exec-in-python/
 
 Look further into...       
 
-'with' on file objects    
 isatty(), truncate()    
-nonlocal        
 
 
 
