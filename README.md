@@ -18,6 +18,15 @@ https://docs.python.org/3.5/howto/functional.html
 exec    
 http://lucumr.pocoo.org/2011/2/1/exec-in-python/      
 
+glob  
+https://docs.python.org/2/library/glob.html#module-glob   
+
+elementtree   
+http://effbot.org/zone/element.htm    
+
+regex   
+https://docs.python.org/2/howto/regex.html#lookahead-assertions   
+
 
 Look further into...       
 
