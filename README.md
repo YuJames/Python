@@ -27,6 +27,11 @@ http://effbot.org/zone/element.htm
 regex   
 https://docs.python.org/2/howto/regex.html#lookahead-assertions   
 
+tkinter   
+http://www.tutorialspoint.com/python/python_gui_programming.htm   
+http://effbot.org/tkinterbook/tkinter-index.htm#introduction    
+
+
 
 Look further into...       
 
