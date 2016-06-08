@@ -6,6 +6,9 @@ https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/
 PEP8 (python style guide)          
 https://www.python.org/dev/peps/pep-0008/
 
+naming conventions    
+http://stackoverflow.com/questions/159720/what-is-the-naming-convention-in-python-for-variable-and-function-names
+
 range()   
 http://pythoncentral.io/pythons-range-function-explained/
 
