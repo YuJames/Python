@@ -22,7 +22,7 @@ glob
 https://docs.python.org/2/library/glob.html#module-glob   
 
 elementtree   
-http://effbot.org/zone/element.htm    
+https://docs.python.org/2/library/xml.etree.elementtree.html  
 
 regex   
 https://docs.python.org/2/howto/regex.html#lookahead-assertions   
