@@ -12,6 +12,12 @@ http://stackoverflow.com/questions/159720/what-is-the-naming-convention-in-pytho
 range()   
 http://pythoncentral.io/pythons-range-function-explained/
 
+multiline statements    
+http://stackoverflow.com/questions/4172448/is-it-possible-to-break-a-long-line-to-multiple-lines-in-python
+
+multiline strings   
+https://www.smallsurething.com/multi-line-strings-in-python/
+
 shallow & deep copy   
 http://stackoverflow.com/questions/19068707/slicing-operation-give-deep-copy-or-shallow-copy
 
