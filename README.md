@@ -40,7 +40,10 @@ tkinter
 http://www.tutorialspoint.com/python/python_gui_programming.htm   
 http://effbot.org/tkinterbook/tkinter-index.htm#introduction    
 
-
+copying files/directories   
+http://pythoncentral.io/how-to-copy-a-file-in-python-with-shutil/   
+http://pythoncentral.io/how-to-recursively-copy-a-directory-folder-in-python/   
+https://docs.python.org/2/library/shutil.html
 
 Look further into...       
 
