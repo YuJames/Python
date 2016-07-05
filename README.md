@@ -34,7 +34,9 @@ elementtree
 https://docs.python.org/2/library/xml.etree.elementtree.html  
 
 regex   
-https://docs.python.org/2/howto/regex.html#lookahead-assertions   
+https://docs.python.org/2/howto/regex.html#regular-expression-howto   
+http://www.regular-expressions.info/lookaround.html   
+http://www.rexegg.com/regex-lookarounds.html    
 
 tkinter   
 http://www.tutorialspoint.com/python/python_gui_programming.htm   
