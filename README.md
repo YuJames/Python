@@ -47,6 +47,9 @@ http://pythoncentral.io/how-to-copy-a-file-in-python-with-shutil/
 http://pythoncentral.io/how-to-recursively-copy-a-directory-folder-in-python/   
 https://docs.python.org/2/library/shutil.html
 
+inheritance   
+https://learnpythonthehardway.org/book/ex44.html    
+
 Look further into...       
 
 isatty(), truncate()    
