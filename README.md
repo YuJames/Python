@@ -37,9 +37,6 @@ https://www.python.org/dev/peps/pep-0008/
 naming conventions    
 http://stackoverflow.com/questions/159720/what-is-the-naming-convention-in-python-for-variable-and-function-names
 
-range()   
-http://pythoncentral.io/pythons-range-function-explained/
-
 multiline statements    
 http://stackoverflow.com/questions/4172448/is-it-possible-to-break-a-long-line-to-multiple-lines-in-python
 
