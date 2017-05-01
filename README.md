@@ -55,6 +55,9 @@ http://lucumr.pocoo.org/2011/2/1/exec-in-python/
 inheritance   
 https://learnpythonthehardway.org/book/ex44.html    
 
+hashing   
+http://www.asmeurer.com/blog/posts/what-happens-when-you-mess-with-hashing-in-python/
+
 Look further into...       
 
 isatty(), truncate()    
