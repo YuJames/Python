@@ -10,34 +10,39 @@ Classes:
 Functions:
     
 Todo:
-    Support more graph types.
+    Mess with special functions (e.g. hash, etc).
+    improve consistency (e.g. naming, etc)
+    Document time complexities.
+        time complexity of "in" keyword?
     Improve size/efficiency.
-    Mess with special functions (e.g. hash).
+    make tests
+    Support more graph types?
     
 """
 
 from copy import deepcopy
 # ^ when to use that?
+# check if need special function, and time complexity
 
 class Node:
     """A graph node.
         
     """
     
-    def __init__(self, id, data = None):
-        """Make a node.
+    def __init__(self, param_id, param_data = None):
+        """Make a node. O(1).
         
         Args:
-            id (int): Id held by node.
-            data (int): Data held by node.
+            param_id (int): Id of new node.
+            param_data (int): Data of new node.
 
         """
         
-        self._data = data
-        self._id = id
+        self._data = param_data
+        self._id = param_id
     
     def __eq__(self, other):
-        """For == comparison.
+        """For == comparison. O(1).
         
         Returns:
             bool: True if equal. False if otherwise.
@@ -46,8 +51,18 @@ class Node:
         
         return (self._data == other._data and self._id == other._id)
         
+    def __ne__(self, other):
+        """For != comparison. O(1).
+        
+        Returns:
+            bool: True if inequal. False if otherwise.
+            
+        """
+        
+        return not (self.__eq__)
+            
     def get_data(self):
-        """Get a node's data.
+        """Get a node's data. O(1).
         
         Returns:
             int: Data in node.
@@ -58,76 +73,95 @@ class Node:
         
     
     def get_id(self):
-        """Get a node's id.
+        """Get a node's id. O(1).
         
         """
         
         return self._id
         
-    def set_data(self, new_data):
-        """Set a node's data.
+    def set_data(self, param_data):
+        """Set a node's data. O(1).
         
         Args:
-            new_data (int): New node data.
+            param_data (int): New node data.
             
         """
         
-        self._data = new_data
+        self._data = param_data
         
-    def set_id(self, new_id):
-        """Set a node's id.
+    def set_id(self, param_id):
+        """Set a node's id. O(1).
         
         Args:
-            new_id (int): New node id.
+            param_id (int): New node id.
             
         """
         
-        self._id = new_id
+        self._id = param_id
 
 class Edge:
     """A graph edge.
     
     """
     
-    def init(self, start, end, weight = None):
-        self._weight = weight
-        self._edge = (start, end)
+    def __init__(self, param_start, param_end, param_weight = None):
+        """Make an edge. O(1).
+        
+        Args:
+            param_start (Node): Starting node of new Edge.
+            param_end (Node): Ending node of new Edge.
+            param_weight (int): Edge weight of new Edge.
+        
+        """
+        
+        self._weight = param_weight
+        self._nodes = (param_start, param_end)
 
     def __eq__(self, other):
-        """For == comparison.
+        """For == comparison. O(1).
         
         Returns:
             bool: True if equal. False if otherwise.
             
         """
-        
+        print "Edge: =="
         return (self._weight == other._weight and 
-                self._edge[0] == other._edge[0] and
-                self._edge[1] == other._edge[1])
+                self._nodes[0] == other._nodes[0] and
+                self._nodes[1] == other._nodes[1])
+
+    def __ne__(self, other):
+        """For != comparison. O(1).
+        
+        Returns:
+            bool: True if inequal. False if otherwise.
             
-    def get_edge(self):
-        """Get an edge's edge.
+        """
+        print "Edge: !="
+        return not self.__eq__(other)
+                    
+    def get_nodes(self):
+        """Get an edge's nodes. O(1).
         
         """
         
-        return self._edge
+        return self._nodes
     
     def get_weight(self):
-        """Get an edge's weight.
+        """Get an edge's weight. O(1).
         
         """
         
         return self._weight
     
     def set_edge(self, new_edge):
-        """Set an edge's edge.
+        """Set an edge's nodes. O(1).
         
         """
         
-        self._edge = new_edge
+        self._nodes = new_edge
         
     def set_weight(self, new_weight):
-        """Set an edge's weight.
+        """Set an edge's weight. O(1).
         
         """
         
@@ -137,128 +171,85 @@ class Edge:
         """Reverse an edge.
         
         Returns:
-            Edge: Reversed edge.
+            Edge: Copy of reversed edge.
         """
         
-        #v does this work? Check special functions
-        new_edge = copy.deepcopy(self)
-        new_edge.set_edge((self._edge[1], self._edge[0]))
+        # does this work? Check special functions
+        new_edge = deepcopy(self)
+        new_edge.set_edge((self._nodes[1], self._nodes[0]))
         
         return new_edge
         
 class Graph:
-    """A basic graph.
+    """A graph of Nodes and Edges.
     
     """
     
     
-    def __init__(self, directed = False, cyclic = False):
-        """Make an empty graph.
+    def __init__(self, param_directed = False):
+        """Make an empty graph. O(1).
         
         Args:
-            directed (bool): Is graph directed.
-            cyclic (bool): Is graph cyclic.
+            param_directed (bool): Is graph directed.
 
         """
         
         self._nodes = list()
         self._edges = list()
-        self._directed = directed
-        self._cyclic = cyclic
-    
-    def add_edge(self, new_edge):
-        """Add an edge if it is unique to the graph's current edges.
+        self._directed = param_directed
+        
+    def add_node(self, param_node):
+        """Add a node if its id is unique to the graph's current nodes. O(V).
         
         Args:
-            new_edge (tuple of Node, Node): Edge to add.
-            
-        Returns:
-            bool: True if added. False if otherwise.
-            
-        """
-
-        # arg breakdown
-        from_node = new_edge[0]
-        to_node = new_edge[1]
-        
-        # add nodes if not in nodes container
-        self.add_node(from_node)
-        self.add_node(to_node)
-        
-        # add edge if not in edges container
-        for (start, end) in self._edges:
-            if start == from_node:
-                if to_node not in end:
-                    end.append(to_node)
-                    return True
-                    
-        return False
-        
-    def add_node(self, new_node):
-        """Add a node if its id is unique to the graph's current nodes.
-        
-        Args:
-            new_node (Node): Node to add.
+            param_node (Node): Node to add.
         
         Returns:
             bool: True if added. False if otherwise.
         """
         
         # check presence in nodes list
-        # absense in nodes list implies absense in edges list
-        if new_node not in self._nodes:
-            self._nodes.append(new_node)
-            self._edges.append((new_node, list()))
-            return True
-        else:
-            return False
-
-    def is_edge(self, edge):
-        """Check for an edge in graph.
-        
-        Args:
-            edge (tuple of (Node, Node)): Edge to check.
-            
-        Return:
-            bool
-        
-        """
-    def get_edges(self, node):
-        """Get a node's neighbors.
-        
-        Args:
-            node (Node): Node whose edges to find.
-            
-        Returns:
-            list: Neighbors of node. None otherwise.
-            
-        """
-        
-        for (start, end) in self._edges:
-            if start == node:
-                return end
-        else:
-            return None
-                        
-    def get_node(self, id):
-        """Get a node by id.
-        
-        Args:
-            id (int): Node id to search.
-            
-        Returns:
-            Node: Node with matching id. None otherwise
-            
-        """
-        
         for node in self._nodes:
-            if id == node._id:
-                return node
-        else:
-            return None
-                    
+            if node.get_id() == param_node.get_id():
+                return False
+        
+        # add to nodes list and edges list
+        # absense in nodes list implies absense in edges list
+        self._nodes.append(param_node)
+        self._edges.append((param_node, list()))
+        return True
+                        
+    def add_edge(self, param_edge):
+        """Add an edge if it is unique to the graph's current edges.
+        
+        Args:
+            param_edge (Edge): Edge to add.
+            
+        Returns:
+            bool: True if added. False if otherwise.
+            
+        """
+        
+        # all edges to add
+        edges_to_add = [param_edge]
+        # account for undirected graph
+        if not self._directed:
+            edges_to_add.append(param_edge.flip())
+            
+        # add nodes if not in nodes container
+        self.add_node(param_edge.get_nodes()[0])
+        self.add_node(param_edge.get_nodes()[1])
+        
+        # add edge if not in edges container
+        for (node, edges) in self._edges:
+            for edge_to_add in edges_to_add:
+                if node == edge_to_add.get_nodes()[0] and edge_to_add not in edges:
+                    edges.append(edge_to_add)
+
+        return False
+       
     def get_nodes(self):
-        """Get all nodes.
+        """Get all nodes. O(1).
         
         Returns:
             list: Graph nodes.
@@ -266,9 +257,125 @@ class Graph:
         """
         
         return self._nodes
-    
+            
+    def get_nodess(self, param_node):
+        """Get a node's edges. O(V).
+        
+        Args:
+            param_node (Node): Node whose edges to find.
+            
+        Returns:
+            list: Edges. None if otherwise.
+            
+        """
+        
+        for (node, edges) in self._edges:
+            if node == param_node:
+                return edges
+        else:
+            return None
+                        
+    def get_node(self, param_id):
+        """Get a node by id. O(V).
+        
+        Args:
+            param_id (int): Node id to search.
+            
+        Returns:
+            Node: Node with matching id. None if otherwise.
+            
+        """
+        
+        for node in self._nodes:
+            if node.get_id() == param_id:
+                return node
+        else:
+            return None
+
+    def is_node(self, param_node):
+        """Check for a node in graph.
+        
+        Args:
+            param_node (Node): Node to check.
+        
+        Returns:
+            bool: True if in graph. False if otherwise.
+        """
+        
+        for node in self._nodes:
+            if node == param_node:
+                return True
+                
+        return False
+        
+    def is_edge(self, param_edge):
+        """Check for an edge in graph.
+        
+        Args:
+            param_edge (Edge): Edge to check.
+            
+        Return:
+            bool: True if edge in graph. False if otherwise.
+        
+        """
+        
+        # possible edges
+        edges_to_check = self.get_nodess(param_edge.get_nodes()[0])
+        
+        # end early
+        if edges_to_check is None or len(edges_to_check) == 0:
+            return False
+        
+        # check edges
+        for edge in edges_to_check:
+            if edge == param_edge:
+                return True
+                
+        return False
+             
+    def is_cyclic(self):
+        """Check if the graph is cyclic. O(V + E)
+        
+        What technique is this?
+        """
+        
+        # nodes where a search has started from
+        starting_nodes = []
+        
+        def find_cycle(start, ignore = None):
+            """Recursively, find a cycle in a graph starting from a node.
+            
+            Args:
+                start (Node): Starting node.
+                ignore (Node): Node neighbor to ignore in an undirected graph.
+                
+            """
+            
+            # already performed recursive search starting here
+            if start in starting_nodes:
+                return False
+            
+            starting_nodes.append(start)
+            for edge in self.get_nodess(start):
+                neighbor_node = edge.get_nodes()[1]
+                # found cycle in a directed graph
+                if self._directed and (neighbor_node in starting_nodes or find_cycle(neighbor_node)):
+                    return True
+                elif not self._directed:
+                    # found candidate for cycle in an undirected graph
+                    if (neighbor_node in starting_nodes):
+                        # also is not backtracking in the path so far
+                        if neighbor_node is not ignore:
+                            return True
+                    # found cycle later down the path
+                    elif find_cycle(neighbor_node, ignore = start):
+                        return True
+            return False
+        
+        return any(find_cycle(node) for node in self._nodes)
+        
     def print_nodes(self):
-        """Print all nodes.
+        """Print all nodes. O(V).
         
         """
         
@@ -278,12 +385,12 @@ class Graph:
             print "  data: {}".format(node.get_data())
 
     def print_edges(self):
-        """Print all edges.
+        """Print all edges. O(V + E).
         
         """
         
         print "~~~Edges~~~"
-        for (start, end) in self._edges:
-            print "start Node id: {}".format(start.get_id())
-            for end_node in end:
-                print "  end Node id: {}".format(end_node.get_id())
+        for (node, edges) in self._edges:
+            print "start Node id: {}".format(node.get_id())
+            for edge in edges:
+                print "  end Node id: {}".format(edge.get_nodes()[1].get_id())

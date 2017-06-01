@@ -1,0 +1,4 @@
+-I want a custom Python graphing library to use for demonstrating some algorithms.
+-Make node a class, and edge a tuple of nodes. Revised to make edge a class b/c of the possibility of edge weight.
+-Make graph class a combination of nodes and edges, and support directed/undirected and cyclic/acyclic options. Revised to only support directed/undirected b/c user should track their graph construction, instead of having the class check during every add_edge call. Include a graph method to check if it's cyclic, instead.
+-Document time complexities, to illustrate current efficiency.
