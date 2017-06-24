@@ -58,6 +58,10 @@ https://learnpythonthehardway.org/book/ex44.html
 hashing   
 http://www.asmeurer.com/blog/posts/what-happens-when-you-mess-with-hashing-in-python/
 
+shebang   
+https://stackoverflow.com/questions/2429511/why-do-people-write-usr-bin-env-python-on-the-first-line-of-a-python-script
+
+
 Look further into...       
 
 isatty(), truncate()    
