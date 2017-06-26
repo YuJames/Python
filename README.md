@@ -1,4 +1,5 @@
-# Python Progress
+# Python Repo Notes
+## Purpose
 The purpose of this repo is to learn Python, gather relevant material, and demonstrate my progress and skills.
 ## Notes
 Python Tutorial Notes (in progress)      
