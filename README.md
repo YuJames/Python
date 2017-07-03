@@ -3,7 +3,7 @@
 The purpose of this repo is to learn Python, gather relevant material, and demonstrate my progress and skills.
 ## Notes
 Python Tutorial Notes    
-<a href="https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing" target="_blank">in progress</a>
+https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing
 
 Mastering Regular Expressions Book Notes    
 https://docs.google.com/document/d/1MbnAatOB-_yAywDYGnDaEZvM1gAYaqx58GeiNkDU45Q/edit?usp=sharing
@@ -60,8 +60,8 @@ hashing
 http://www.asmeurer.com/blog/posts/what-happens-when-you-mess-with-hashing-in-python/
 
 shebang   
-https://stackoverflow.com/questions/2429511/why-do-people-write-usr-bin-env-python-on-the-first-line-of-a-python-script
-
+https://stackoverflow.com/questions/2429511/why-do-people-write-usr-bin-env-python-on-the-first-line-of-a-python-script   
+https://stackoverflow.com/questions/6908143/should-i-put-shebang-in-python-scripts-and-what-form-should-it-take
 
 Look further into...       
 
