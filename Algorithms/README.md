@@ -1,3 +1,3 @@
 # Algorithms Folder Notes
 ## Purpose
-The purpose of this folder is to demonstrate my knowledge on common algorithms.
+The purpose of this folder is to demonstrate my knowledge of common algorithms.
