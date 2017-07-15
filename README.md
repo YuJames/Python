@@ -11,7 +11,7 @@ https://docs.google.com/document/d/1MbnAatOB-_yAywDYGnDaEZvM1gAYaqx58GeiNkDU45Q/
 Mastering Python Regular Expressions Book Notes   
 https://docs.google.com/document/d/1JmcUhUAU931DChaZmzx8d2o4Y-ShLga7ewUc3LlCYKM/edit?usp=sharing
 
-## Explored Modules
+## Interesting Modules
 glob  
 https://docs.python.org/2/library/glob.html#module-glob   
 
