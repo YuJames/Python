@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """This module provides the required classes for representing graphs.
     
 Attributes:
@@ -10,11 +12,10 @@ Classes:
 Functions:
     
 Todo:
-    Mess with special functions (e.g. hash, etc).
+    Mess with special functions (e.g. hash, etc)
     improve consistency (e.g. naming, etc)
-    Document time complexities.
-        time complexity of "in" keyword?
-    Improve size/efficiency.
+    Document time complexities
+    Improve size/efficiency
     make tests
     Support more graph types?
     
@@ -48,6 +49,9 @@ class Node:
             bool: True if equal. False if otherwise.
             
         """
+        
+        #debug
+        print "Node: __eq__"
         
         return (self._data == other._data and self._id == other._id)
         
@@ -124,7 +128,10 @@ class Edge:
             bool: True if equal. False if otherwise.
             
         """
+        
+        #debug
         print "Edge: =="
+        
         return (self._weight == other._weight and 
                 self._nodes[0] == other._nodes[0] and
                 self._nodes[1] == other._nodes[1])
@@ -136,7 +143,10 @@ class Edge:
             bool: True if inequal. False if otherwise.
             
         """
+        
+        #debug
         print "Edge: !="
+        
         return not self.__eq__(other)
                     
     def get_nodes(self):
@@ -238,7 +248,12 @@ class Graph:
             
         # add nodes if not in nodes container
         self.add_node(param_edge.get_nodes()[0])
+        #debug
+        print "add second"
         self.add_node(param_edge.get_nodes()[1])
+        
+        #debug
+        print "check edges"
         
         # add edge if not in edges container
         for (node, edges) in self._edges:
@@ -258,7 +273,7 @@ class Graph:
         
         return self._nodes
             
-    def get_nodess(self, param_node):
+    def get_edges(self, param_node):
         """Get a node's edges. O(V).
         
         Args:
@@ -320,18 +335,17 @@ class Graph:
         """
         
         # possible edges
-        edges_to_check = self.get_nodess(param_edge.get_nodes()[0])
+        edges_to_check = self.get_edges(param_edge.get_nodes()[0])
         
         # end early
         if edges_to_check is None or len(edges_to_check) == 0:
             return False
         
         # check edges
-        for edge in edges_to_check:
-            if edge == param_edge:
-                return True
-                
-        return False
+        if param_edge in edges_to_check:
+            return True
+        else:
+            return False
              
     def is_cyclic(self):
         """Check if the graph is cyclic. O(V + E)
@@ -356,7 +370,7 @@ class Graph:
                 return False
             
             starting_nodes.append(start)
-            for edge in self.get_nodess(start):
+            for edge in self.get_edges(start):
                 neighbor_node = edge.get_nodes()[1]
                 # found cycle in a directed graph
                 if self._directed and (neighbor_node in starting_nodes or find_cycle(neighbor_node)):
@@ -394,3 +408,22 @@ class Graph:
             print "start Node id: {}".format(node.get_id())
             for edge in edges:
                 print "  end Node id: {}".format(edge.get_nodes()[1].get_id())
+                
+                
+# test
+if __name__ == "__main__":
+    # make graph
+    graph1 = Graph(param_directed = True)
+    # add edges
+    node1 = Node(1, 7)
+    node2 = Node(2, 15)
+    edge12_1 = Edge(node1, node2)
+    edge12_2 = Edge(node1, node2)
+    print id(edge12_1)
+    print id(edge12_2)
+    graph1.add_edge(edge12)
+    print "wut"
+    print graph1.is_edge(edge12_1)
+    print graph1.is_edge(edge12_2)
+    
+    
