@@ -31,6 +31,9 @@ http://effbot.org/tkinterbook/tkinter-index.htm#introduction
 exec    
 http://lucumr.pocoo.org/2011/2/1/exec-in-python/      
 
+function annotation   
+https://ceronman.com/2013/03/12/a-powerful-unused-feature-of-python-function-annotations/   
+
 hashing   
 http://www.asmeurer.com/blog/posts/what-happens-when-you-mess-with-hashing-in-python/
 
