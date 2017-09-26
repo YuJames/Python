@@ -1,6 +1,6 @@
 # Python Repo Notes
 ## Purpose
-The purpose of this repo is to learn Python, gather relevant material, and demonstrate my progress and skills.
+The purpose of this repo is to learn Python, gather relevant material, and demonstrate my progress.
 ## Notes
 Tutorial: Python    
 https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing
