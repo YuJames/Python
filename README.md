@@ -5,7 +5,7 @@ The purpose of this repo is to learn Python, gather relevant material, and demon
 Tutorial: Python    
 https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing
 
-Book: Mastering Regular Expressions
+Book: Mastering Regular Expressions   
 https://docs.google.com/document/d/1MbnAatOB-_yAywDYGnDaEZvM1gAYaqx58GeiNkDU45Q/edit?usp=sharing
 
 Book: Mastering Python Regular Expressions   
