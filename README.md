@@ -27,7 +27,7 @@ tkinter
 http://www.tutorialspoint.com/python/python_gui_programming.htm   
 http://effbot.org/tkinterbook/tkinter-index.htm#introduction    
 
-## Interesting info   
+## Interesting Info   
 exec    
 http://lucumr.pocoo.org/2011/2/1/exec-in-python/      
 
@@ -65,4 +65,4 @@ https://docs.python.org/3.5/howto/functional.html
 super()   
 https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
 
-## Explore later    
+## Explore Later    
