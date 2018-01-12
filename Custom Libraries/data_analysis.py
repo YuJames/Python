@@ -7,30 +7,40 @@ data. The purpose is to encourage statistical process control (SPC).
 
 Arguments:
     argv[1]: excel file path
-    argv[2]: saved data file path
+    argv[2]: config json file path
+    argv[3]: saved data file path (currently not used)
     
 ToDo:
-    improve table_dict
-    Find alternative to globals. Enums?
-    change text input value to match closest value (not just if only exceeding max)
+    update docstrings
+    rename functions
+    make figure class
+        improve callback_text_input
+    change text input value to match closest value (not just if only exceeding max)?
         e.g. with y values of [1, 3, 6], a "max y" input of 5 would change to 3
     add more checks/preprocessing?
     fix "float division by zero error" (when sigma = 0)
         impossible? Give warning instead?
     Look into static type checking
         Do not run yet, but prepare code.
-    *make sure docstrings are correct
+        float vs np.float64
+        work on class methods?
+    *improve docstrings
     *improve modularity (globals, fxns, variables)
-        review necessity of some functions
     *improve naming
+    *correct return vs return None vs nothing
+    
 *check consistently throughout project
 """
 
 #~~~~  IMPORTS  ~~~~#
-import json  # not currently used
+import enum
+import json  # not currently used (will be)
 import subprocess # not currently used
 import sys
 import time  # not currently used
+import typing
+
+from functools import partial
 
 import bokeh
 import bokeh.client as bkc
@@ -42,41 +52,205 @@ import bokeh.models.widgets as bkmw
 import bokeh.plotting as bkp
 import numpy as np
 import pandas as pd
-import tools # not currently used
+import tools
 
-#~~~~  PRIVATE GLOBAL VARIABLES  ~~~~#
-# floating precision
-_PRECISION = 3
-# excel sheet names
-_DATA_SHEET_NAME = "Data"
-_CONSTANTS_SHEET_NAME = "Constants"
-# excel constants
-_TITLE_KEY = "title"
-_LOWER_LIMIT_KEY = "lower_limit"
-_UPPER_LIMIT_KEY = "upper_limit"
-_X_AXIS_KEY = "x_axis"
-_Y_AXIS_KEY = "y_axis"
-# excel values
-_TITLE_NAME = None
-_LOWER_LIMIT_NAME = None
-_UPPER_LIMIT_NAME = None
-_X_AXIS_NAME = None
-_Y_AXIS_NAME = None
-# keys to access ColumnDataSources
-_PLOT_SOURCE = "plot_source"
-_TABLE_SOURCE = "table_source"
-_Y_MAX = "y_axis_max"
-_Y_MIN = "y_axis_min"
-_X_MAX = "x_axis_max"
-_X_MIN = "x_axis_min"
+#~~~~  PRIVATE (GLOBAL CONSTANTS and ENUMS)  ~~~~#
+class _TableCdsKey(enum.Enum):
+    AVG = "average"
+    CPK = "cpk"
+    VAR_MAX = "variation_max"
+    VAR_MIN = "variation_min"
+    FAILS_NUM = "fails (num)"
+    FAILS_RATIO = "fails (%)"
+
+class _DataKey(enum.Enum):
+    # keys to access _ConstantData and _VariableData
+    EXCEL_DF = "excel_dataframe"
+    PLOT_CDS = "plot_source"
+    TABLE_CDS = "table_source"
+    EXCEL_Y_MAX = "excel_y_max"
+    EXCEL_Y_MIN = "excel_y_min"
+    EXCEL_X_MAX = "excel_x_max"
+    EXCEL_X_MIN = "excel_x_min"
+    PLOT_Y_MAX = "plot_y_max"
+    PLOT_Y_MIN = "plot_y_min"
+    PLOT_X_MAX = "plot_x_max"
+    PLOT_X_MIN = "plot_x_min"
+
+_JsonKey = None        # stuff from json (title name, axis names, sheet names, etc)
+
+class _WidgetKey(enum.Enum):
+    Y_MAX_INPUT = "Y Max Value (inclusive)"
+    Y_MIN_INPUT = "Y Min Value (inclusive)"
+    X_MAX_INPUT = "X Max Index (inclusive)"
+    X_MIN_INPUT = "X Min Index (inclusive)"
+    COL_NAME_OUTPUT = "Calculation"
+    COL_VALUE_OUTPUT = "Value"
+    
 # script arguments for testing/development
 _TEST_ARGV1 = r"C:\Users\Alfred\Documents\GitHub\Python\Custom Libraries\test_data.xlsx"
-_TEST_ARGV2 = r"C:\Users\Alfred\Documents\GitHub\Python\Custom Libraries\test_output.json"
+_TEST_ARGV2 = r"C:\Users\Alfred\Documents\GitHub\Python\Custom Libraries\test_config.json"
+
+#~~~~  PUBLIC (GLOBAL CONSTANTS and ENUMS)  ~~~~#
+
+#~~~~  PRIVATE GLOBAL VARIABLES  ~~~~#
 
 #~~~~  PUBLIC GLOBAL VARIABLES  ~~~~#
 
 #~~~~  PRIVATE CLASSES  ~~~~#
+class _VariationAnalysisData(object):
+    col1 = "index"
+    col2 = "value"    
+    
+    def __init__(self, data_df):
+        # list commons
+        y_axis = data_df.loc[:, _JsonKey.Y_NAME.value]
+        x_axis = data_df.loc[:, _JsonKey.X_NAME.value]
+        
+        # make calcs
+        table_dict = {self.__class__.col1: [_TableCdsKey.AVG.value,
+                                            _TableCdsKey.CPK.value,
+                                            _TableCdsKey.VAR_MAX.value,
+                                            _TableCdsKey.VAR_MIN.value,
+                                            _TableCdsKey.FAILS_NUM.value,
+                                            _TableCdsKey.FAILS_RATIO.value],
+                      self.__class__.col2: [_calc_average(y_axis), 
+                                            _calc_cpk(y_axis, _JsonKey.LOWER_LIMIT.value, _JsonKey.UPPER_LIMIT.value), 
+                                            _calc_variation_limits(y_axis)[1],
+                                            _calc_variation_limits(y_axis)[0],
+                                            _calc_failures(y_axis, _JsonKey.LOWER_LIMIT.value, _JsonKey.UPPER_LIMIT.value)[0],
+                                            _calc_failures(y_axis, _JsonKey.LOWER_LIMIT.value, _JsonKey.UPPER_LIMIT.value)[1]]}
+                                            
+        # init members
+        self.sources = {}
+        self.data = {}
+        # init sources
+        self.sources[_DataKey.PLOT_CDS] = bkms.ColumnDataSource(data=data_df)
+        self.sources[_DataKey.TABLE_CDS] = bkms.ColumnDataSource(data=table_dict)
+        # init derived limits
+        self.data[_DataKey.EXCEL_DF] = data_df 
+        self.data[_DataKey.EXCEL_Y_MAX] = y_axis.max()
+        self.data[_DataKey.EXCEL_Y_MIN] = y_axis.min()
+        self.data[_DataKey.EXCEL_X_MAX] = x_axis.size - 1
+        self.data[_DataKey.EXCEL_X_MIN] = 0 
+        self.data[_DataKey.PLOT_Y_MAX] = y_axis.max()
+        self.data[_DataKey.PLOT_Y_MIN] = y_axis.min()
+        self.data[_DataKey.PLOT_X_MAX] = x_axis.size - 1
+        self.data[_DataKey.PLOT_X_MIN] = 0 
 
+    def get(self, key):
+        """Get the value mapped to by a key.
+        
+        Args:
+            key: key (_DataKey or _TableCdsKey)
+        Returns:
+            pd.DataFrame, bkms.ColumnDataSource, float, or int.
+        """
+        
+        if key in _TableCdsKey:
+            index_of_key = self.sources[_DataKey.TABLE_CDS].data[self.__class__.col1].index(key.value)
+            return self.sources[_DataKey.TABLE_CDS].data[self.__class__.col2][index_of_key]
+        elif key is _DataKey.PLOT_CDS or key is _DataKey.TABLE_CDS:
+            return self.sources[key]
+        else:
+            return self.data[key]
+               
+    def set(self, key, value):
+        """Set the value mapped to by a key.
+        
+        Args:
+            key: key (_DataKey or _TableCdsKey)
+        Returns:
+            None
+        """
+        
+        if key in _TableCdsKey:
+            index_of_key = self.sources[_DataKey.TABLE_CDS].data[self.__class__.col1].index(key.value)
+            self.sources[_DataKey.TABLE_CDS].data[self.__class__.col2][index_of_key] = value
+        elif key is _DataKey.PLOT_CDS or key is _DataKey.TABLE_CDS:
+            self.sources[key].data = value
+        else:
+            self.data[key] = value
+
+    def update_limits(self, changed_aspect, new_value):
+        """Preprocess and record an input value.
+        
+        Args:
+            changed_aspect: input widget (String)
+            new_value: input value (float)
+        Returns:
+            None
+        """
+        
+        tools.print_fxn_name()
+        if changed_aspect is _WidgetKey.Y_MAX_INPUT:
+            value = min(np.float64(new_value), self.data[_DataKey.EXCEL_Y_MAX])
+            self.set(key=_DataKey.PLOT_Y_MAX, value=value)
+        elif changed_aspect is _WidgetKey.Y_MIN_INPUT:
+            value = max(np.float64(new_value), self.data[_DataKey.EXCEL_Y_MIN])
+            self.set(key=_DataKey.PLOT_Y_MIN, value=value)
+        elif changed_aspect is _WidgetKey.X_MAX_INPUT:
+            value = min(int(new_value), self.data[_DataKey.EXCEL_X_MAX])
+            self.set(key=_DataKey.PLOT_X_MAX, value=value)
+        elif changed_aspect is _WidgetKey.X_MIN_INPUT:
+            value = max(int(new_value), self.data[_DataKey.EXCEL_X_MIN])
+            self.set(key=_DataKey.PLOT_X_MIN, value=value)
+        tools.print_fxn_name()
+    
+    def update_plot_cds(self):
+        """Update the plot data.
+        
+        Args:
+            None
+        Returns:
+            None
+        """
+        
+        tools.print_fxn_name()
+        # make cals
+        constants_df = self.data[_DataKey.EXCEL_DF]
+        new_plot_df = constants_df.iloc[self.data[_DataKey.PLOT_X_MIN]: self.data[_DataKey.PLOT_X_MAX] + 1, :]
+        new_plot_df = new_plot_df[(new_plot_df[_JsonKey.Y_NAME.value] <= self.data[_DataKey.PLOT_Y_MAX]) & 
+                                  (new_plot_df[_JsonKey.Y_NAME.value] >= self.data[_DataKey.PLOT_Y_MIN])]
+        new_plot_dict = {_JsonKey.X_NAME.value: new_plot_df[_JsonKey.X_NAME.value].as_matrix(), 
+                         _JsonKey.Y_NAME.value: new_plot_df[_JsonKey.Y_NAME.value].as_matrix()}
+        # update source
+        self.set(key=_DataKey.PLOT_CDS, value=new_plot_dict)
+        tools.print_fxn_name() 
+    
+    def update_table_cds(self):
+        """Update the table data.
+        
+        Args:
+            None
+        Returns:
+            None
+        """
+        
+        tools.print_fxn_name()
+        # list commons
+        y_axis = self.sources[_DataKey.PLOT_CDS].data[_JsonKey.Y_NAME.value]
+        
+        # make calcs
+        table_dict = {self.__class__.col1: [_TableCdsKey.AVG.value,
+                                            _TableCdsKey.CPK.value,
+                                            _TableCdsKey.VAR_MAX.value,
+                                            _TableCdsKey.VAR_MIN.value,
+                                            _TableCdsKey.FAILS_NUM.value,
+                                            _TableCdsKey.FAILS_RATIO.value],
+                      self.__class__.col2: [_calc_average(y_axis), 
+                                            _calc_cpk(y_axis, _JsonKey.LOWER_LIMIT.value, _JsonKey.UPPER_LIMIT.value), 
+                                            _calc_variation_limits(y_axis)[1],
+                                            _calc_variation_limits(y_axis)[0],
+                                            _calc_failures(y_axis, _JsonKey.LOWER_LIMIT.value, _JsonKey.UPPER_LIMIT.value)[0],
+                                            _calc_failures(y_axis, _JsonKey.LOWER_LIMIT.value, _JsonKey.UPPER_LIMIT.value)[1]]}
+        # update sources                       
+        self.set(key=_DataKey.TABLE_CDS, value=table_dict)
+        tools.print_fxn_name()
+
+class _VariationAnalysisFigure(object):
+    pass
+           
 #~~~~  PUBLIC CLASSES  ~~~~#
 
 #~~~~  PRIVATE FUNCTIONS  ~~~~#
@@ -90,17 +264,20 @@ def _is_string_number(string: str) -> bool:
     """
     
     # terminate early
+    tools.print_fxn_name()
     if string == "":
         return False
     
     try:
         float(string)
     except ValueError:
+        tools.print_fxn_name()
         return False
     else:
+        tools.print_fxn_name()
         return True
     
-def _calculate_average(data_set: pd.Series) -> float:
+def _calc_average(data_set: pd.Series) -> float:
     """Calculate the average of a given data set.
     
     Args:
@@ -109,12 +286,14 @@ def _calculate_average(data_set: pd.Series) -> float:
         average (float)
     """
     
+    tools.print_fxn_name()
     average = data_set.mean(axis=0)
-    rounded_average = round(average, _PRECISION)
+    rounded_average = round(average, _JsonKey.PRECISION.value)
 
+    tools.print_fxn_name()
     return rounded_average
     
-def _calculate_average_moving_range(data_set: pd.Series, subset_length: int) -> float:
+def _calc_average_moving_range(data_set: pd.Series, subset_length: int) -> float:
     """Calculate the average mR of a given data set.
     
     Args:
@@ -124,6 +303,7 @@ def _calculate_average_moving_range(data_set: pd.Series, subset_length: int) -> 
         average mR (float)
     """
     
+    tools.print_fxn_name()
     count = 0.0
     # data subsets to calculate mR on
     element_pairs = zip(data_set[:-(subset_length - 1)], data_set[(subset_length - 1):])
@@ -132,11 +312,12 @@ def _calculate_average_moving_range(data_set: pd.Series, subset_length: int) -> 
         count += abs(left - right)
         
     result = count / (len(data_set) - (subset_length - 1))
-    rounded_result = round(result, _PRECISION)
+    rounded_result = round(result, _JsonKey.PRECISION.value)
+    tools.print_fxn_name()
     
     return rounded_result
     
-def _calculate_variation_limits(data_set):
+def _calc_variation_limits(data_set: pd.Series) -> float:
     """Calculate the upper/lower range limits of a data set.
     
     Args:
@@ -145,20 +326,22 @@ def _calculate_variation_limits(data_set):
         (upper, lower) (float 2-tuple)
     """
     
+    tools.print_fxn_name()
     # calculate averages
-    average = _calculate_average(data_set)
-    average_moving_range = _calculate_average_moving_range(data_set, 2)
+    average = _calc_average(data_set)
+    average_moving_range = _calc_average_moving_range(data_set, 2)
     
     # calculate limits
     upper_natural_process_limits = average + (2.66 * average_moving_range)
     lower_natural_process_limits = average - (2.66 * average_moving_range)
     
     result = (lower_natural_process_limits, upper_natural_process_limits)
-    rounded_result = (round(result[0], _PRECISION), round(result[1], _PRECISION))
+    rounded_result = (round(result[0], _JsonKey.PRECISION.value), round(result[1], _JsonKey.PRECISION.value))
     
+    tools.print_fxn_name()
     return rounded_result
 
-def _calculate_cpk(data_set, lower, upper):
+def _calc_cpk(data_set: pd.Series, lower: float, upper: float) -> float:
     """Calculate the cpk of a given data set.
     
     Args:
@@ -169,6 +352,7 @@ def _calculate_cpk(data_set, lower, upper):
         cpk (float)
     """
 
+    tools.print_fxn_name()
     arr = np.array([x for x in data_set]).ravel()
     sigma = np.std(arr)
     mean = np.mean(data_set)
@@ -177,11 +361,12 @@ def _calculate_cpk(data_set, lower, upper):
     right = np.float64(mean - lower) / (3 * sigma)
     
     result = min(left, right)
-    rounded_result = round(result, _PRECISION)
+    rounded_result = round(result, _JsonKey.PRECISION.value)
     
+    tools.print_fxn_name()
     return rounded_result
 
-def _calculate_outside_limits(data_set, lower, upper):
+def _calc_failures(data_set: pd.Series, lower: float, upper: float) -> typing.Tuple[float, float]:
     """Calculate the amount of values outside the limits.
     
     Args:
@@ -192,335 +377,183 @@ def _calculate_outside_limits(data_set, lower, upper):
         (number, percent) (float 2-tuple)
     """
     
+    tools.print_fxn_name()
     length = data_set.shape[0]
     count = 0.0
     for x in data_set:
         if x < lower or x > upper:
             count += 1
             
-    result = (count, round(count * 100 / length))
-    rounded_result = (result[0], round(result[1], _PRECISION))
+    result = (count, round(count * 100 / length, _JsonKey.PRECISION.value))
+    rounded_result = (result[0], round(result[1], _JsonKey.PRECISION.value))
     
+    tools.print_fxn_name()
     return rounded_result
 
-def _update_globals(constants_df):
-    """Update global variables.
-    
-    Args:
-        constants_df: Constants DataFrame to parse (DataFrame)
-    Returns:
-        None
+def create_json_enum(json_file):
+    """
     """
     
-    # globals
-    global _TITLE_NAME
-    global _X_AXIS_NAME
-    global _Y_AXIS_NAME
-    global _UPPER_LIMIT_NAME
-    global _LOWER_LIMIT_NAME
+    tools.print_fxn_name()
+    global _JsonKey
     
-    # update globals
-    _TITLE_NAME = constants_df.at[_TITLE_KEY, 1]
-    _X_AXIS_NAME = constants_df.at[_X_AXIS_KEY, 1]
-    _Y_AXIS_NAME = constants_df.at[_Y_AXIS_KEY, 1]
-    _UPPER_LIMIT_NAME = constants_df.at[_UPPER_LIMIT_KEY, 1]
-    _LOWER_LIMIT_NAME = constants_df.at[_LOWER_LIMIT_KEY, 1]
+    with open(json_file, "r") as f:
+        json_obj = json.load(f)
+        _JsonKey = enum.Enum(value="_JsonKey", 
+                              names={"PRECISION": json_obj["precision"],
+                                     "DATA_SHEET_NAME": json_obj["data_sheet_name"],
+                                     "TITLE": json_obj["title"],
+                                     "UPPER_LIMIT": json_obj["upper_limit"],
+                                     "LOWER_LIMIT": json_obj["lower_limit"],
+                                     "Y_NAME": json_obj["y_name"],
+                                     "X_NAME": json_obj["x_name"]})
+    tools.print_fxn_name()
         
-def _make_constant_data(data_df, constants_df):
-    """Determine constant data from excel data.
+def _prepare_variation_analysis_data(file_path: str) -> _VariationAnalysisData:
+    """Preprocess data for variation analysis.
     
     Args:
-        data_df: Data DataFrame to parse (DataFrame)
-        constants_df: Constants DataFrame to parse (DataFrame)
+        file_path: excel file path (String)
     Returns:
-        {_PLOT_SOURCE: ColumnDataSource, 
-         _X_MAX: int,
-         _X_MIN: int,
-         _Y_MAX: float,
-         _Y_MIN: float} (dict)
+        preprocessed data (_VariationAnalysisData)
     """
     
-    # get raw data
-    constant_data = {}
-    constant_data[_PLOT_SOURCE] = bkms.ColumnDataSource(data=data_df) 
-
-    # get derived data
-    constant_data[_Y_MAX] = data_df.loc[:, _Y_AXIS_NAME].max()
-    constant_data[_Y_MIN] = data_df.loc[:, _Y_AXIS_NAME].min()
-    constant_data[_X_MAX] = len(data_df.loc[:, _X_AXIS_NAME]) - 1
-    constant_data[_X_MIN] = 0
-
-    # append useful info
-    # hover_index = pd.DatetimeIndex(data = pd.to_datetime(constant_data["x_axis"]))
-    # input_dict["dates"] = hover_index.format()
-    
-    return constant_data    
-
-def _make_variable_data(data_df, constants_df, constant_data):
-    """Determine variable data from constant_data and excel data.
-    
-    Args:
-        data_df: Data DataFrame to parse (DataFrame)
-        constants_df: Constants DataFrame to parse (DataFrame)
-        constant_data: constant data (dict)
-    Returns:
-            {_PLOT_SOURCE: ColumnDataSource, 
-             _TABLE_SOURCE: ColumnDataSource,
-             _X_MAX: int,
-             _X_MIN: int,
-             _Y_MAX: float,
-             _Y_MIN: float} (dict)        
-    """
-    
-    # relevant data
-    y_axis = data_df.loc[:, _Y_AXIS_NAME]
-    x_axis = data_df.loc[:, _X_AXIS_NAME]
-
-    # source init
-    variable_data = {}
-    table_dict = {"index": ["average",
-                            "cpk",
-                            "lower variation limit",
-                            "upper variation limit",
-                            "outside pass-fail (num)",
-                            "outside pass-fail (%)"],
-                  "value": [_calculate_average(y_axis), 
-                            _calculate_cpk(y_axis, _LOWER_LIMIT_NAME, _UPPER_LIMIT_NAME), 
-                            _calculate_variation_limits(y_axis)[0],
-                            _calculate_variation_limits(y_axis)[1],
-                            _calculate_outside_limits(y_axis, _LOWER_LIMIT_NAME, _UPPER_LIMIT_NAME)[0],
-                            _calculate_outside_limits(y_axis, _LOWER_LIMIT_NAME, _UPPER_LIMIT_NAME)[1]]}
-                             
-    variable_data[_PLOT_SOURCE] = bkms.ColumnDataSource(data=data_df)
-    variable_data[_TABLE_SOURCE] = bkms.ColumnDataSource(data=table_dict)
-    variable_data[_Y_MAX] = max(y_axis)
-    variable_data[_Y_MIN] = min(y_axis)
-    variable_data[_X_MAX] = len(x_axis) - 1
-    variable_data[_X_MIN] = 0
-
-    return variable_data  
-
-def _variation_pre_analysis(file_path: str):
-    """Parse and prepare data for analysis.
-    
-    Args:
-        file_path: excel file path (str)
-    Returns:
-        plot/widget sources (ColumnDataSource 2-tuple)
-    """
+    tools.print_fxn_name()
+    # update globals
+    create_json_enum(_TEST_ARGV2)    
     
     # grab data
-    data_df = pd.read_excel(io=file_path, sheetname=_DATA_SHEET_NAME)
-    constants_df = pd.read_excel(io=file_path, sheetname=_CONSTANTS_SHEET_NAME, header=None, index_col=0)
-    
-    # update globals
-    _update_globals(constants_df)
+    data_df = pd.read_excel(io=file_path, sheetname=_JsonKey.DATA_SHEET_NAME.value)
     
     # clean variable data
-    data_df = data_df.round(decimals={_Y_AXIS_NAME: _PRECISION})
+    data_df = data_df.round(decimals={_JsonKey.Y_NAME.value: _JsonKey.PRECISION.value})
     data_df = data_df.drop_duplicates()
-    data_df = data_df.sort_values(by=[_X_AXIS_NAME, _Y_AXIS_NAME])
+    data_df = data_df.sort_values(by=[_JsonKey.X_NAME.value, _JsonKey.Y_NAME.value])
     
     # stucture data
-    constant_data = _make_constant_data(data_df=data_df, constants_df=constants_df)
-    variable_data = _make_variable_data(data_df=data_df, constants_df=constants_df, constant_data=constant_data)
+    preprocessed_data = _VariationAnalysisData(data_df=data_df)
     
-    return (constant_data, variable_data)
+    tools.print_fxn_name()
+    return preprocessed_data
     
-def _create_variation_UI(constant_data, variable_data):
-    """Given a data set, create the corresponding UI components.
+def _create_variation_analysis_UI(preprocessed_data):
+    """Create the UI for variation analysis.
     
     Args:
-        constant_data: constant data (dict)
-        variable_data: variable data (dict)
+        preprocessed_data: (_VariationAnalysisData)
     Returns:
         None
     """
 
-    # commonly used
-    constant_source = constant_data[_PLOT_SOURCE]
-    constant_source_data = constant_source.data
-    constants_df = constant_source.to_df()
-    variable_source = variable_data[_PLOT_SOURCE]
-    variable_table_source = variable_data[_TABLE_SOURCE]
-    
-    # init figure
-    figure = bkp.figure(title=_TITLE_NAME,
-                        x_axis_label=_X_AXIS_NAME, 
-                        y_axis_label=_Y_AXIS_NAME, 
-                        x_axis_type="datetime",
-                        y_axis_type="linear",
-                        plot_width=1200)
-    # figure.add_tools(bkm.HoverTool(tooltips=[("x", "@{}".format(constant_data[_X_AXIS_KEY])), ("y", "@{}".format(constant_data[_Y_AXIS_KEY])), ("index", "$index")]))  
-    figure.circle(x=_X_AXIS_NAME, y=_Y_AXIS_NAME, 
-                  size = 5, fill_color = "white", source=variable_source, legend="points")
-    figure.line(x=_X_AXIS_NAME, y=_Y_AXIS_NAME, source=variable_source, legend="lines")
-    # configure and add lines
-    average = bkm.Span(dimension="width", line_color="#000000", line_dash="dashed",
-                       location=variable_table_source.data["value"][0], line_width=3)
-    pf_upper = bkm.Span(dimension="width", line_color="#FF0000", line_dash="dashed",
-                        location=_UPPER_LIMIT_NAME, line_width=3)
-    pf_lower = bkm.Span(dimension="width", line_color="#FF0000", line_dash="dashed",
-                        location=_LOWER_LIMIT_NAME, line_width=3)
-    variation_upper = bkm.Span(dimension="width", line_color="#FFA500", line_dash="dashed",
-                               location=variable_table_source.data["value"][3], line_width=3)
-    variation_lower = bkm.Span(dimension="width", line_color="#FFA500", line_dash="dashed",
-                               location=variable_table_source.data["value"][2], line_width=3)
-    figure.add_layout(average)
-    figure.add_layout(pf_upper)
-    figure.add_layout(pf_lower)
-    figure.add_layout(variation_upper)
-    figure.add_layout(variation_lower)
-    
-    # widget callbacks & misc nested functions
-    def update_plot(changed_aspect, new_value):
-        print("update_plot")
-        upper_limit = variable_data[_Y_MAX]
-        lower_limit = variable_data[_Y_MIN]
-        upper_index = variable_data[_X_MAX]
-        lower_index = variable_data[_X_MIN]
+    tools.print_fxn_name()
+    # callbacks and misc functions 
+    def configure_figure():
+        # add tools
+        # figure.add_tools(bkm.HoverTool(tooltips=[("x", "@{}".format(constant_data[_JsonKey.X_AXIS_KEY.value])), 
+        #                                          ("y", "@{}".format(constant_data[_JsonKey.Y_AXIS_KEY.value])), 
+        #                                          ("index", "$index")]))
+        # add plot data glyphs
+        figure.circle(x=_JsonKey.X_NAME.value, y=_JsonKey.Y_NAME.value, 
+                    size = 5, fill_color = "white", source=preprocessed_data.get(key=_DataKey.PLOT_CDS), legend="points")
+        figure.line(x=_JsonKey.X_NAME.value, y=_JsonKey.Y_NAME.value, source=preprocessed_data.get(key=_DataKey.PLOT_CDS), legend="lines")
+        # add legend
+        figure.legend.click_policy="hide"
+        figure.legend.border_line_width = 3
+        figure.legend.border_line_color = "navy" 
+        figure.legend.background_fill_alpha = 0
+    def edit_input_value(obj, changed_aspect):
+        """Edit the input widget's value.
         
-        if changed_aspect == "upper_limit":
-            upper_limit = min(np.float64(new_value), constant_data[_Y_MAX])
-            variable_data[_Y_MAX] = upper_limit
-        elif changed_aspect == "lower_limit":
-            lower_limit = max(np.float64(new_value), constant_data[_Y_MIN])  
-            variable_data[_Y_MIN] = lower_limit
-        elif changed_aspect == "upper_index":
-            upper_index = min(int(new_value), constant_data[_X_MAX])
-            variable_data[_X_MAX] = upper_index
-        elif changed_aspect == "lower_index":
-            lower_index = max(int(new_value), constant_data[_X_MIN])
-            variable_data[_X_MIN] = lower_index
-        
-        print("upper_limit: {}".format(upper_limit))
-        print("lower_limit: {}".format(lower_limit))
-        print("upper_index: {}".format(upper_index))
-        print("lower_index: {}".format(lower_index))
-        
-        new_plot_data = constants_df.iloc[lower_index: upper_index + 1, :]
-        new_plot_data = new_plot_data[(new_plot_data[_Y_AXIS_NAME] <= upper_limit) & 
-                                      (new_plot_data[_Y_AXIS_NAME] >= lower_limit)]  
-        new_plot_dict = {_X_AXIS_NAME: new_plot_data[_X_AXIS_NAME].as_matrix(), _Y_AXIS_NAME: new_plot_data[_Y_AXIS_NAME].as_matrix()}
-        variable_data[_PLOT_SOURCE].data = new_plot_dict
-        print("update_plot")
-        
-    def update_data():
-        print("update_data")
-        # commonly used
-        y_axis = variable_source.data[_Y_AXIS_NAME]
-        
-        # make updates
-        table_dict = {"index": ["average",
-                                "cpk",
-                                "lower variation limit",
-                                "upper variation limit",
-                                "outside pass-fail (num)",
-                                "outside pass-fail (%)"],
-                    "value": [_calculate_average(y_axis), 
-                                _calculate_cpk(y_axis, _LOWER_LIMIT_NAME, _UPPER_LIMIT_NAME), 
-                                _calculate_variation_limits(y_axis)[0],
-                                _calculate_variation_limits(y_axis)[1],
-                                _calculate_outside_limits(y_axis, _LOWER_LIMIT_NAME, _UPPER_LIMIT_NAME)[0],
-                                _calculate_outside_limits(y_axis, _LOWER_LIMIT_NAME, _UPPER_LIMIT_NAME)[1]]}
-                                
-        variable_data[_TABLE_SOURCE].data = table_dict   
-        print("update_data")
-            
+        Args:
+            obj: 
+            changed_aspect:
+        Returns:
+            None
+        """
+        tools.print_fxn_name()
+        # change input visual if exceeding max/min
+        if changed_aspect is _WidgetKey.Y_MAX_INPUT:
+            obj.value = str(preprocessed_data.get(key=_DataKey.PLOT_Y_MAX))
+        elif changed_aspect is _WidgetKey.Y_MIN_INPUT:
+            obj.value = str(preprocessed_data.get(key=_DataKey.PLOT_Y_MIN))
+        elif changed_aspect is _WidgetKey.X_MAX_INPUT:
+            obj.value = str(preprocessed_data.get(key=_DataKey.PLOT_X_MAX)) 
+        elif changed_aspect is _WidgetKey.X_MIN_INPUT:
+            obj.value = str(preprocessed_data.get(key=_DataKey.PLOT_X_MIN))         
+        tools.print_fxn_name()    
     def update_plot_lines():
-        print("update_plot_lines")
-        average.location = variable_table_source.data["value"][0]
-        variation_upper.location = variable_table_source.data["value"][3]
-        variation_lower.location = variable_table_source.data["value"][2]   
-        print("update_plot_lines")     
-    
-    def callback_plot_upper_limit(attr, old, new):
-        print("callback_plot_upper_limit")
+        """Edit the plot's lines with _VariationAnalysisData.
+        
+        Args:
+            None
+        Returns:
+            None
+        """
+        tools.print_fxn_name()
+        average.location = preprocessed_data.get(key=_TableCdsKey.AVG)
+        variation_max.location = preprocessed_data.get(key=_TableCdsKey.VAR_MAX)
+        variation_min.location = preprocessed_data.get(key=_TableCdsKey.VAR_MIN) 
+        tools.print_fxn_name() 
+    def callback_text_input(attr, old, new, widget):
+        """Process new input.
+        
+        Args:
+            attr: changed widget attribute (String)
+            old: old widget value (String)
+            new: new widget value (String)
+            widget: widget id (_WidgetKey)
+        Returns:
+            None
+        """
+        tools.print_fxn_name()
+
+        obj = None
+        if widget is _WidgetKey.Y_MAX_INPUT:
+            obj = y_max_input
+        elif widget is _WidgetKey.Y_MIN_INPUT:
+            obj = y_min_input
+        elif widget is _WidgetKey.X_MAX_INPUT:
+            obj = x_max_input
+        elif widget is _WidgetKey.X_MIN_INPUT:
+            obj = x_min_input
+            
         # terminate early
         if _is_string_number(new) is False:
-            y_upper_input.value = old
+            obj.value = old
+            tools.print_fxn_name()
             return
         formatted_new = np.float("{:.3f}".format(np.float64(new)))
         if formatted_new == old:
-            y_upper_input.value = old
+            obj.value = old
+            tools.print_fxn_name()
             return
-        if formatted_new < variable_data[_Y_MIN]:
-            y_upper_input.value = old
-            return
-        
-        # update source (variable_data) and max y value
-        update_plot("upper_limit", new)
-        
-        # update variable_data table info
-        update_data()
-
-        # update plot lines
+        if widget is _WidgetKey.Y_MAX_INPUT:
+            if formatted_new < preprocessed_data.get(key=_DataKey.PLOT_Y_MIN):
+                obj.value = old
+                tools.print_fxn_name()
+                return
+        elif widget is _WidgetKey.Y_MIN_INPUT:
+            if formatted_new > preprocessed_data.get(key=_DataKey.PLOT_Y_MAX):
+                obj.value = old
+                tools.print_fxn_name()
+                return
+        elif widget is _WidgetKey.X_MAX_INPUT:
+            if formatted_new < preprocessed_data.get(key=_DataKey.PLOT_X_MIN):
+                obj.value = old
+                tools.print_fxn_name()
+                return
+        elif widget is _WidgetKey.X_MIN_INPUT:
+            if formatted_new > preprocessed_data.get(key=_DataKey.PLOT_X_MAX):
+                obj.value = old
+                tools.print_fxn_name()
+                return
+    
+        # update data, plot, input widget, and output widget
+        preprocessed_data.update_limits(changed_aspect=widget, new_value=formatted_new)
+        preprocessed_data.update_plot_cds()
+        preprocessed_data.update_table_cds()
         update_plot_lines()
-        
-        # change input visual if exceeding max/min
-        y_upper_input.value = str(variable_data[_Y_MAX])
-        print("callback_plot_upper_limit")
-        
-    def callback_plot_lower_limit(attr, old, new):
-        print("callback_plot_lower_limit")
-        # terminate early
-        if _is_string_number(new) is False or old == new or np.float("{:.3f}".format(np.float64(new))) > variable_data[_Y_MAX]:
-            y_lower_input.value = old
-            return
-            
-        # update variable_data source and min y value
-        update_plot("lower_limit", new)
-                
-        # update variable_data table info
-        update_data()
-        
-        # update input source
-        update_plot_lines()
-                
-        # change input visual if exceeding max/min
-        y_lower_input.value = str(variable_data[_Y_MIN])
-        print("callback_plot_lower_limit")
-
-    def callback_plot_upper_index(attr, old, new):
-        print("callback_plot_upper_index")
-        # terminate early
-        if _is_string_number(new) is False or old == new or int(new) < variable_data[_X_MIN]:
-            x_upper_input.value = old
-            return
-            
-        # update variable_data source and max x index
-        update_plot("upper_index", new)
-        
-        # update variable_data table info
-        update_data()
-        
-        # update plot lines
-        update_plot_lines()
-        
-        # change input visual if exceeding max/min
-        x_upper_input.value = str(variable_data[_X_MAX])
-        print("callback_plot_upper_index")
-        
-    def callback_plot_lower_index(attr, old, new):
-        print("callback_plot_lower_limit")
-        # terminate early
-        if _is_string_number(new) is False or old == new or int(new) > variable_data[_X_MAX]:
-            x_lower_input.value = old
-            return
-        
-        # update variable_data source and min x index
-        update_plot("lower_index", new)
-        
-        # update variable_data table info
-        update_data()
-        
-        # update plot lines
-        update_plot_lines()
-        
-        # change input visual if exceeding max/min
-        x_lower_input.value = str(variable_data[_X_MIN])
-        print("callback_plot_lower_limit")
-        
+        edit_input_value(obj=obj, changed_aspect=widget)
     # def callback_save_output():
     #     tools.create_timestamp(output_file_path)
     #     with open(output_file_path, "a") as f:
@@ -528,62 +561,82 @@ def _create_variation_UI(constant_data, variable_data):
     #                 "output": [(item, value) for item, value in zip(output_data.data["calculation"], output_data.data["value"])]}
     #         JSON_STRING = json.dumps(dict, indent = 2, sort_keys = True)
     #         f.write(JSON_STRING + "\n\n")
-            
-    # configure input widgets
-    y_upper_input = bkm.TextInput(title="Y Max Value (inclusive)", 
-                                  value=str(constant_data[_Y_MAX]))
-    y_upper_input.on_change("value", callback_plot_upper_limit)
-    y_lower_input = bkm.TextInput(title="Y Min Value (inclusive)", 
-                                  value=str(constant_data[_Y_MIN]))
-    y_lower_input.on_change("value", callback_plot_lower_limit)
-    x_upper_input = bkm.TextInput(title="X Max Index (inclusive)", 
-                                  value=str(constant_data[_X_MAX]))
-    x_upper_input.on_change("value", callback_plot_upper_index)
-    x_lower_input = bkm.TextInput(title="X Min Index (inclusive)", 
-                                  value=str(constant_data[_X_MIN]))
-    x_lower_input.on_change("value", callback_plot_lower_index)
-    save_data = bkm.Button(label="save data", button_type="success")
-    # save_data.on_click(callback_save_output)
     
-    # # configure output widgets
-    table_column1 = bkmw.TableColumn(field="index", title="Calculation", sortable=False)
-    table_column2 = bkmw.TableColumn(field="value", title="Value", sortable=False)
-    table_output = bkmw.DataTable(source=variable_data[_TABLE_SOURCE], columns=[table_column1, table_column2], 
+    # init figure
+    figure = bkp.figure(title=_JsonKey.TITLE.value,
+                        x_axis_label=_JsonKey.X_NAME.value, 
+                        y_axis_label=_JsonKey.Y_NAME.value, 
+                        x_axis_type="datetime",
+                        y_axis_type="linear",
+                        plot_width=1200)
+    # configure figure
+    configure_figure()
+    # add lines
+    average = bkm.Span(dimension="width", line_color="#000000", line_dash="dashed",
+                    location=preprocessed_data.get(key=_TableCdsKey.AVG), line_width=3)
+    pass_fail_max = bkm.Span(dimension="width", line_color="#FF0000", line_dash="dashed",
+                            location=_JsonKey.UPPER_LIMIT.value, line_width=3)
+    pass_fail_min = bkm.Span(dimension="width", line_color="#FF0000", line_dash="dashed",
+                            location=_JsonKey.LOWER_LIMIT.value, line_width=3)
+    variation_max = bkm.Span(dimension="width", line_color="#FFA500", line_dash="dashed",
+                            location=preprocessed_data.get(key=_TableCdsKey.VAR_MAX), line_width=3)
+    variation_min = bkm.Span(dimension="width", line_color="#FFA500", line_dash="dashed",
+                            location=preprocessed_data.get(key=_TableCdsKey.VAR_MIN), line_width=3)
+    figure.add_layout(average)
+    figure.add_layout(pass_fail_max)
+    figure.add_layout(pass_fail_min)
+    figure.add_layout(variation_max)
+    figure.add_layout(variation_min)
+
+    # init input widgets
+    y_max_input = bkm.TextInput(title=_WidgetKey.Y_MAX_INPUT.value, 
+                                value=str(preprocessed_data.get(key=_DataKey.EXCEL_Y_MAX)))
+    y_min_input = bkm.TextInput(title=_WidgetKey.Y_MIN_INPUT.value, 
+                                value=str(preprocessed_data.get(key=_DataKey.EXCEL_Y_MIN)))  
+    x_max_input = bkm.TextInput(title=_WidgetKey.X_MAX_INPUT.value, 
+                                value=str(preprocessed_data.get(key=_DataKey.EXCEL_X_MAX)))
+    x_min_input = bkm.TextInput(title=_WidgetKey.X_MIN_INPUT.value, 
+                                value=str(preprocessed_data.get(key=_DataKey.EXCEL_X_MIN)))
+    save_data = bkm.Button(label="save data", button_type="success")
+    # configure input widgets
+    y_max_input.on_change("value", partial(callback_text_input, widget=_WidgetKey.Y_MAX_INPUT))
+    y_min_input.on_change("value", partial(callback_text_input, widget=_WidgetKey.Y_MIN_INPUT))
+    x_max_input.on_change("value", partial(callback_text_input, widget=_WidgetKey.X_MAX_INPUT))
+    x_min_input.on_change("value", partial(callback_text_input, widget=_WidgetKey.X_MIN_INPUT))
+    # save_data.on_click(callback_save_output)
+    # add output widgets
+    table_column1 = bkmw.TableColumn(field=_VariationAnalysisData.col1, 
+                                     title=_WidgetKey.COL_NAME_OUTPUT.value, sortable=False)
+    table_column2 = bkmw.TableColumn(field=_VariationAnalysisData.col2, 
+                                     title=_WidgetKey.COL_VALUE_OUTPUT.value, sortable=False)
+    table_output = bkmw.DataTable(source=preprocessed_data.get(key=_DataKey.TABLE_CDS), 
+                                  columns=[table_column1, table_column2], 
                                   row_headers=False, sizing_mode="scale_width", fit_columns=False)    
-
-    # configure and add figure legend
-    # figure.legend.location = "top_left"
-    figure.legend.click_policy="hide"
-    figure.legend.border_line_width = 3
-    figure.legend.border_line_color = "navy" 
-    figure.legend.background_fill_alpha = 0
-
-    # # configure UI layout 
-    input_left = bkl.column([y_upper_input, y_lower_input])
-    input_right = bkl.column([x_upper_input, x_lower_input])
+    # configure layout
+    input_left = bkl.column([y_max_input, y_min_input])
+    input_right = bkl.column([x_max_input, x_min_input])
     text_input = bkl.row([input_left, input_right])
     input = bkl.column([text_input, save_data])
     widgets = bkl.row([input, table_output])
     plot_and_io = bkl.column([figure, widgets])
-    #@debug
     bkio.curdoc().add_root(plot_and_io)
 
-    return None   
+    tools.print_fxn_name()
 
 #~~~~  PUBLIC FUNCTIONS  ~~~~#
 def variation_analysis(file_path: str) -> None:
     """Perform and display a variation analysis.
     
     Args:
-        file_path: excel file path (str)
+        file_path: excel file path (String)
     Returns:
         None
     """
     
-    constant_data, variable_data = _variation_pre_analysis(file_path)
-    _create_variation_UI(constant_data, variable_data)
-    
-    return None
+    tools.print_fxn_name()
+    preprocessed_data = _prepare_variation_analysis_data(file_path)
+    _create_variation_analysis_UI(preprocessed_data)
+    tools.print_fxn_name()
 
 #~~~~  MAIN  ~~~~#
 variation_analysis(_TEST_ARGV1)
@@ -616,8 +669,8 @@ variation_analysis(_TEST_ARGV1)
 #         # create UI
 #         #@DEBUG
 #         display_column_of_rows = []
-#         # display_subset = create_UI(_variation_pre_analysis(sys.argv[1]), sys.argv[2])
-#         display_subset = create_UI(_variation_pre_analysis(_TEST_ARGV1), _TEST_ARGV2)
+#         # display_subset = create_UI(_prepare_variation_analysis_data(sys.argv[1]), sys.argv[2])
+#         display_subset = create_UI(_prepare_variation_analysis_data(_TEST_ARGV1), _TEST_ARGV2)
 #         # display_column_of_rows.append(display_subset)
 #         # # DISPLAY ONTO WEB BROWSER
 #         # bkio.curdoc().add_root(display_column_of_rows)
@@ -651,45 +704,3 @@ variation_analysis(_TEST_ARGV1)
 #     elif(function_flag is 2):
 #         # placeholder
 #         None
-
-# def _round_df(df):
-#     """Round float values.
-#     
-#     Args:
-#         df: DataFrame to round.
-#     Returns:
-#         rounded DataFrame (DataFrame)
-#     """
-#     
-#     rounded_df = df.round({"voltage (V)": 3})
-#     
-#     return rounded_df
-#     
-# def _filter_duplicates(df):
-#     """Filter duplicates in place.
-#     
-#     Args:
-#         df: DataFrame to filter (DataFrame)
-#     Returns:
-#         number of duplicates found (int)
-#     """
-#     
-#     num_rows_before = df.shape[0]
-#     df.drop_duplicates(inplace=True)
-#     num_rows_after = df.shape[0]
-#     number_of_dupes = num_rows_before - num_rows_after
-#     
-#     return number_of_dupes
-# 
-# def _sort_df(df):
-#     """Sort DataFrame in place.
-#     
-#     Args:
-#         df: DataFrame to sort (DataFrame)
-#     Returns:
-#         None
-#     """
-#     
-#     df.sort_values(by=["datetime", "voltage (V)"], inplace=True)
-#     
-#     return None

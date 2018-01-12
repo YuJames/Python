@@ -135,6 +135,9 @@ def create_timestamp(output_file_path):
         
     return result
 
+def print_fxn_name(depth=1):
+    print(sys._getframe(1).f_code.co_name)
+    
 def result_handler(result_obj):
     """Handle the return of a ResultObject.
     
