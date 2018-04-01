@@ -1,33 +1,44 @@
+#!/usr/bin/env python3
+
 """General-purpose tools.
 
 This module contains general-purpose tools for use in Python scripts.
-    
+
+Arguments:
+
 Todo:
-    check if need to inherit from 'object' class to use @property
+    ~~~~NOW~~~~
+    ~~~~CONSIDERATION~~~~
     change debug.setter to an adder?
     name mangling
     how to document properties
     typecheck enum arg/return
     document imports versions? this module's version?
     document enum?
+    ~~~~PERIODICALLY~~~~
     
 """
 
-#~~~~  imports  ~~~~#
+#~~~~  IMPORTS  ~~~~#
 import datetime
 import enum
+import logging
 import sys
+import time
 
-#~~~~  global variables  ~~~~#
+#~~~~  PRIVATE GLOBAL VARIABLES  ~~~~#
 
+#~~~~  PUBLIC GLOBAL VARIABLES  ~~~~#
 
-#~~~~  classes  ~~~~#
+#~~~~  PRIVATE CLASSES  ~~~~#
+
+#~~~~  PUBLIC CLASSES  ~~~~#
 @enum.unique
 class Status(enum.Enum):
     SUCCESS = 1
     FAILURE = 0
 
-class ResultObject(object):
+class ResultObject():
     """Hold a function's result and error info for easy diagnostics.
     
     Attributes:
@@ -79,31 +90,73 @@ class ResultObject(object):
     @debug.setter
     def debug(self, debug):
         self._debug = self._debug + debug + "\n"
+
+class MyLogger():
+    """Context manager for logging.
+    
+    """
+    
+    def __init__(self, file):
+        self._file = file
+        self._logger = logging.getLogger(__name__)
+        self._logger.setLevel(logging.DEBUG)
+        self._logger.addHandler(logging.FileHandler(self._file))
         
-#~~~~  functions  ~~~~#
-def make_formatted_title(title: str) -> str:
+    def __enter__(self):
+        self._logger.info("{:%Y-%m-%d %H:%M:%S} ENTER: {}".format(datetime.datetime.now(), get_fxn_name(depth=2)))
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._logger.info("{:%Y-%m-%d %H:%M:%S} EXIT: {}".format(datetime.datetime.now(), get_fxn_name(depth=2)))
+    
+    def write(self, level, msg):
+        self._logger.log(level=level, msg=msg)
+    
+class MyTimer():
+    """Context manager for measuring execution time.
+    
+    """
+    
+    def __init__(self):
+        pass
+        
+    def __enter__(self):
+        format_title(title=get_fxn_name(depth=2), should_print=True)
+        self._start = time.time()
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._end = time.time()
+        print("function time: {} seconds".format(self._end - self._start))
+        
+#~~~~  PRIVATE FUNCTIONS  ~~~~#
+
+#~~~~  PUBLIC FUNCTIONS  ~~~~#
+def format_title(title: str, should_print=False) -> str:
     """Format a title.
     
     Args:
-        title: heading (string)
+        title: heading (str)
     Returns:
-        result: formatted title (string)
+        result: formatted title (str)
     """
     
     title_length = len(title)
     result = "\n" + title.upper() + "\n"
     for i in range(title_length):
         result += "-"
-
-    return result
     
-def make_formatted_script_args() -> str:
+    if should_print is False:
+        return result
+    else:
+        print(result)
+    
+def format_script_args() -> str:
     """Format script arguments.
     
     Args:
         None
     Returns:
-        result: formatted script args (string)
+        result: formatted script args (str)
     """
     
     result = ""
@@ -116,7 +169,7 @@ def create_timestamp(output_file_path):
     """Add a formatted timestamp to a file.
     
     Args:
-        output_file_path: test result file path (string)
+        output_file_path: test result file path (str)
     Returns:
         result: N/A (ResultObject)
     """
@@ -135,9 +188,12 @@ def create_timestamp(output_file_path):
         
     return result
 
-def print_fxn_name(depth=1):
-    print(sys._getframe(1).f_code.co_name)
+def get_fxn_name(depth=1, should_print=False):
+    if should_print is True:
+        print(sys._getframe(depth).f_code.co_name)
     
+    return sys._getframe(depth).f_code.co_name
+        
 def result_handler(result_obj):
     """Handle the return of a ResultObject.
     
@@ -148,3 +204,7 @@ def result_handler(result_obj):
     """
     
     None
+
+#~~~~  MAIN  ~~~~#
+
+#~~~~  DEAD CODE  ~~~~#
