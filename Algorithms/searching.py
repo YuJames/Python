@@ -1,15 +1,18 @@
-"""This module provides breadth first search functionality.
-    
-Attributes:
+#!/usr/bin/env python3
 
-Classes:
+"""Searching Algorithms.
+
+This module provides searching functionality.
     
-Functions:
-    breadth_first_search
-    
-Todo:
-    track depth
-    track other stuff?
+ToDo:
+    ~~~~NOW~~~~
+    track depth, other stuff
+    ~~~~CONSIDERATION~~~~
+    ~~~~PERIODICALLY~~~~
+    improve docstrings
+    improve modularity (globals, fxns, variables)
+    improve naming
+    return vs return None vs nothing
     
 """
 
