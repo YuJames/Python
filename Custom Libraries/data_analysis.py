@@ -20,11 +20,7 @@ ToDo:
 """
 
 #~~~~  IMPORTS  ~~~~#
-import functools
 import tools
-import tkinter as tk
-import tkinter.messagebox as tkm
-import tkinter.filedialog as tkf
 import variation_analysis
 
 #~~~~  PRIVATE GLOBAL VARIABLES  ~~~~#
@@ -35,61 +31,7 @@ _TEST_ARGV2 = r"C:\Users\Alfred\Documents\GitHub\Python\Custom Libraries\test_lo
 #~~~~  PUBLIC GLOBAL VARIABLES  ~~~~#
 
 #~~~~  PRIVATE CLASSES  ~~~~#
-class _UI():
-    def __init__(self, parent):
-        # metadata
-        parent.title("Data Analysis Script")
-        self.frame1 = tk.Frame(parent, bg="blue", padx=20, pady=30)
-        self.frame1.pack(fill=tk.BOTH, expand=True)
-        #root.geometry('350x200')
-        
-        # file widgets
-        self.json_title = tk.Label(self.frame1, text="JSON Config File")
-        self.json_title.grid(column=0, row=0)
-        self.json_path = tk.Entry(self.frame1, width=30)
-        self.json_path.focus()
-        self.json_path.grid(column=1, row=0)
-        self.json_search = tk.Button(self.frame1, text="browse", command=functools.partial(self._cb_file, widget=self.json_path))
-        self.json_search.grid(column=2, row=0)        
-        
-        excel_title = tk.Label(self.frame1, text="Excel Data File")
-        excel_title.grid(column=0, row=1)
-        excel_path = tk.Entry(self.frame1, width=30)
-        excel_path.grid(column=1, row=1)
-        excel_search = tk.Button(self.frame1, text="browse", command=functools.partial(self._cb_file, widget=excel_path))
-        excel_search.grid(column=2, row=1)
-    
-        log_title = tk.Label(self.frame1, text="Log File")
-        log_title.grid(column=0, row=2)
-        log_path = tk.Entry(self.frame1, width=30)
-        log_path.grid(column=1, row=2)
-        log_search = tk.Button(self.frame1, text="browse", command=functools.partial(self._cb_file, widget=log_path))
-        log_search.grid(column=2, row=2)
-        
-        # menu widgets
-        self.menu = tk.Menu(parent)
-        parent.config(menu=self.menu)
-        
-        self.file_menu = tk.Menu(self.menu, tearoff=0)
-        self.file_menu.add_command(label="Save")
-        self.file_menu.add_separator()
-        self.file_menu.add_command(label="Open")
-        self.menu.add_cascade(label="File", menu=self.file_menu)
-        
-        # misc widgets
-        self.options = tk.Checkbutton(self.frame1, text="option 1", command=self._cb_popup)
-        self.options.grid(column=4, row=0)
-        
-        
-    def _cb_file(self, widget):
-        file = tkf.askopenfilename()
-        widget.delete(0, "end")
-        widget.insert(0, file)
-    
-    def _cb_popup(self):
-        tkm.showinfo("title", "content")
-        # showerror, showwarning
-        
+
 #~~~~  PUBLIC CLASSES  ~~~~#
 
 #~~~~  PRIVATE FUNCTIONS  ~~~~#
@@ -98,11 +40,7 @@ class _UI():
 
 #~~~~  MAIN  ~~~~#
 def main():
-    root = tk.Tk()
-    gui = _UI(root)
-    root.mainloop()
-    
-    # variation_analysis.variation_analysis(json_file_path=_TEST_ARGV1)
+    variation_analysis.variation_analysis(json_file_path=_TEST_ARGV1)
 
 main()
 

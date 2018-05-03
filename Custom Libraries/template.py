@@ -7,9 +7,7 @@ Details
 Arguments:
 
 ToDo:
-    ~~~~NOW~~~~
-    ~~~~CONSIDERATION~~~~
-    ~~~~PERIODICALLY~~~~
+    
 """
 
 #~~~~  IMPORTS  ~~~~#
