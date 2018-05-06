@@ -8,7 +8,6 @@ ToDo:
     ~~~~NOW~~~~
     ~~~~CONSIDERATION~~~~
     include average and best case
-    make solution more pythonic
     ~~~~PERIODICALLY~~~~
     improve docstrings
     improve modularity (globals, fxns, variables)
@@ -19,8 +18,6 @@ ToDo:
 
 def bubble_sort(data):
     """Sort a list of unique numbers in ascending order using bubble sort. O(n^2).
-    
-    The process includes repeatedly iterating through a list and swapping adjacent elements. 
     
     Args:
         data: data to sort (list of int)
@@ -51,8 +48,6 @@ def bubble_sort(data):
 
 def quick_sort(data):
     """Sort a list of unique numbers in ascending order using quick sort. O(n^2).
-    
-    The process includes recursively splitting a list into a pivot, smaller side, and larger side.
     
     Args:
         data: data to sort (list of int)
@@ -85,29 +80,15 @@ def quick_sort(data):
 def insert_sort(data):
     """Sort a list of unique numbers in ascending order using insert sort. O(n^2).
     
-    The process includes iterating through a list and ordering elements as they're visited.
-    
     Args:
         data: data to sort (list of int)
     Returns:
         sorted list
     """
     
-    sorted_data = data[:]
-    
-    for i, value in enumerate(sorted_data):
-        print("ITERATION: {}".format(i))
-        for j in range(i):
-            moving_index = i - 1 - j
-            if sorted_data[moving_index] > value:
-                sorted_data[moving_index + 1] = sorted_data[moving_index]
-                sorted_data[moving_index] = value
-    
-    return sorted_data
+    pass
 
-a = [1, -1, 8, 240, -8]
-b = [1, 2]
+# a = [1, -1, 8, 240, -8]
 # print(a)
 # b = bubble_sort(a)
 # print(a)
-print(insert_sort(a))

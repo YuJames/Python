@@ -1,37 +1,13 @@
+import bokeh.models.sources as bkms
 import pandas as pd
-import numpy as np
 import enum
-import bokeh.models.widgets.sliders as bkmws
+import traceback
 
-
-from tkinter import *
-root = Tk()
-
-def hello():
-    print("hello!")
-
-menubar = Menu(root)
-
-# create a pulldown menu, and add it to the menu bar
-filemenu = Menu(menubar, tearoff=0)
-filemenu.add_command(label="Open", command=hello)
-filemenu.add_command(label="Save", command=hello)
-filemenu.add_separator()
-filemenu.add_command(label="Exit", command=root.quit)
-menubar.add_cascade(label="File", menu=filemenu)
-
-# create more pulldown menus
-editmenu = Menu(menubar, tearoff=0)
-editmenu.add_command(label="Cut", command=hello)
-editmenu.add_command(label="Copy", command=hello)
-editmenu.add_command(label="Paste", command=hello)
-menubar.add_cascade(label="Edit", menu=editmenu)
-
-helpmenu = Menu(menubar, tearoff=0)
-helpmenu.add_command(label="About", command=hello)
-menubar.add_cascade(label="Help", menu=helpmenu)
-
-# display the menu
-root.config(menu=menubar)
-root.mainloop()
-
+class _CdsTableKey(enum.Enum):
+    AVG = "average"
+    CPK = "cpk"
+    VAR_MAX = "variation_max"
+    VAR_MIN = "variation_min"
+    FAILS_NUM = "fails (num)"
+    FAILS_RATIO = "fails (%)"
+    
