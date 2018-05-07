@@ -1,3 +1,7 @@
 *.pyc
-Custom Libraries/test_config.json
-Custom Libraries/testing.py
+Misc/test_config.json
+
+Misc/testing.py
+
+
+Misc/test_data.xlsx
