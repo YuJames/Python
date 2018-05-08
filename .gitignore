@@ -1,7 +1,4 @@
 *.pyc
 Misc/test_config.json
-
 Misc/testing.py
-
-
 Misc/test_data.xlsx
