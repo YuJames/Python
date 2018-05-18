@@ -7,7 +7,6 @@ This module provides sorting functionality.
 ToDo:
     ~~~~NOW~~~~
     ~~~~CONSIDERATION~~~~
-    include average and best case
     make solution more pythonic
     ~~~~PERIODICALLY~~~~
     improve docstrings
@@ -96,7 +95,6 @@ def insert_sort(data):
     sorted_data = data[:]
     
     for i, value in enumerate(sorted_data):
-        print("ITERATION: {}".format(i))
         for j in range(i):
             moving_index = i - 1 - j
             if sorted_data[moving_index] > value:
@@ -105,9 +103,29 @@ def insert_sort(data):
     
     return sorted_data
 
-a = [1, -1, 8, 240, -8]
+def selection_sort(data):
+    """Sort a list of unique numbers in ascending order using selection sort. O(n^2).
+    
+    The process includes repeatedly iterating through a list, finding the smallest element, and sorting that element.
+    
+    Args:
+        data: data to sort (list of int)
+    Returns:
+        sorted list
+    """
+
+    sorted_data = data[:]
+    
+    for i, value in enumerate(sorted_data):
+        # find smallest value in unsorted subset
+        min_value = min(sorted_data[i:])
+        index_min = sorted_data.index(min_value)
+        
+        # place smallest value at start of unsorted subset
+        sorted_data[i], sorted_data[index_min] = min_value, value
+
+    return sorted_data
+
+a = [1, -1, 8, -8, 240]
 b = [1, 2]
-# print(a)
-# b = bubble_sort(a)
-# print(a)
-print(insert_sort(a))
+print(selection_sort(a))
