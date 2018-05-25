@@ -94,12 +94,14 @@ def insert_sort(data):
     
     sorted_data = data[:]
     
+    # visit new elements
     for i, value in enumerate(sorted_data):
-        for j in range(i):
-            moving_index = i - 1 - j
-            if sorted_data[moving_index] > value:
-                sorted_data[moving_index + 1] = sorted_data[moving_index]
-                sorted_data[moving_index] = value
+        # compare each new element with previously visited elements
+        for j in range(i, -1, -1):
+            # swap if needed
+            if sorted_data[j] > value:
+                sorted_data[j + 1] = sorted_data[j]
+                sorted_data[j] = value
     
     return sorted_data
 
@@ -126,6 +128,62 @@ def selection_sort(data):
 
     return sorted_data
 
+def merge_sort(data):
+    """Sort a list of unique numbers in ascending order using merge sort. .
+    
+    The process includes recursively splitting a list to a smaller and larger side.
+    
+    Args:
+        data: data to sort (list of int)
+    Returns:
+        sorted list
+    """
+    
+    # split
+    data_len = len(data)
+    
+    # terminate early
+    if data_len == 1:
+        return data
+
+    # split
+    left = data[:data_len // 2]
+    right = data[data_len // 2:]
+
+    # make recursive calls
+    sorted_left = merge_sort(left)
+    sorted_right = merge_sort(right)
+    
+    # combine
+    sorted_data = []
+    while True:
+        smaller = None
+        if len(sorted_left) != 0 and len(sorted_right) != 0:
+            smaller = sorted_left.pop(0) if sorted_left[0] < sorted_right[0] else sorted_right.pop(0)
+        elif len(sorted_left) != 0:
+            smaller = sorted_left.pop(0)
+        elif len(sorted_right) != 0:
+            smaller = sorted_right.pop(0)
+        else:
+            break
+            
+        sorted_data.append(smaller)
+    
+    return sorted_data
+    
+def heap_sort(data):
+    """Sort a list of unique numbers in ascending order using heap sort. .
+    
+    N/A
+    
+    Args:
+        data: data to sort (list of int)
+    Returns:
+        sorted list
+    """
+    
+    pass
+    
 a = [1, -1, 8, -8, 240]
 b = [1, 2]
-print(selection_sort(a))
+print(insert_sort(a))
