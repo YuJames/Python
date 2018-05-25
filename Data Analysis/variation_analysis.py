@@ -7,15 +7,21 @@ data.
     
 ToDo:
     ~~~~NOW~~~~
+    log preprocessing
     control data types better
     fix HoverTool
     ~~~~CONSIDERATION~~~~
-    add moving range graph
-    add option to pick preprocessing steps
-    drop row in dataframe if not fitting a data type (type check)
-    add more checks/preprocessing (including json file)
-    fix "float division by zero error" (when sigma = 0)
-        impossible? Give warning instead?
+    features: 
+        input options: 
+            sliders or textinput (how to handle y range select)
+            prune outliers
+        output options:
+            add moving range graph
+        process:
+            more checks/preprocessing (json file, type check dataframe row)
+    fixes:
+        fix "float division by zero error" (when sigma = 0)
+            impossible? Give warning instead?
     Look into static type checking
         float vs np.float64
         work on class methods
