@@ -5,14 +5,14 @@
 This module contains general-purpose tools for use in Python scripts.
 
 Arguments:
+    N/A
 
 Todo:
     ~~~~NOW~~~~
     ~~~~CONSIDERATION~~~~
-    change debug.setter to an adder?
     name mangling
     how to document properties
-    typecheck enum arg/return
+    static typecheck
     document imports versions? this module's version?
     document enum?
     ~~~~PERIODICALLY~~~~
@@ -21,7 +21,6 @@ Todo:
 
 #~~~~  IMPORTS  ~~~~#
 import datetime
-import enum
 import logging
 import sys
 import time
@@ -33,178 +32,123 @@ import time
 #~~~~  PRIVATE CLASSES  ~~~~#
 
 #~~~~  PUBLIC CLASSES  ~~~~#
-@enum.unique
-class Status(enum.Enum):
-    SUCCESS = 1
-    FAILURE = 0
-
-class ResultObject():
-    """Hold a function's result and error info for easy diagnostics.
-    
-    Attributes:
-        result (any): Function's return value.
-        status (Status): Function's completion status.
-        message (str): Function's return message.
-        debug (str): Function's debugging log.
-    """
-    
-    _debug_start = "\n**** START DEBUG ****\n"
-    _debug_end = "**** END DEBUG ****\n"
-    
-    def __init__(self) -> None:
-        self._result = None
-        self._status = None
-        self._message = None
-        self._debug = ""
+class LoggerAndTimer:
+    def __init__(self, file=None, timer=True):
+        """Context manager for logging and measuring execution time.
         
-    @property
-    def result(self):
-        print("getting result")
-        return self._result
-          
-    @result.setter
-    def result(self, result):
-        print("setting result")
-        self._result = result
-        
-    @property
-    def status(self):
-        return self._status
-
-    @status.setter
-    def status(self, status):
-        self._status = status
-            
-    @property
-    def message(self):
-        return self._message
-
-    @message.setter
-    def message(self, message):
-        self._message = message
-        
-    @property
-    def debug(self):
-        return ResultObject._debug_start + self._debug + ResultObject._debug_end
-
-    @debug.setter
-    def debug(self, debug):
-        self._debug = self._debug + debug + "\n"
-
-class MyLogger():
-    """Context manager for logging.
-    
-    """
-    
-    def __init__(self, file):
+        Args:
+            file: log file (str or None)
+            timer: measure execution time (bool)
+        Returns:
+            None
+        """
         self._file = file
-        self._logger = logging.getLogger(__name__)
-        self._logger.setLevel(logging.DEBUG)
-        self._logger.addHandler(logging.FileHandler(self._file))
-        
+        self._track_time = timer
+        self._output = ""
+
+        if file is not None:
+            self._logger = logging.getLogger(__name__)
+            self._logger.setLevel(logging.DEBUG)
+            self._logger.addHandler(logging.FileHandler(self._file))
+
+
     def __enter__(self):
-        self._logger.info("{:%Y-%m-%d %H:%M:%S} ENTER: {}".format(datetime.datetime.now(), get_fxn_name(depth=2)))
+        self._output += f"{fg_timestamp(False)} - [ENTER] fxn name: {g_fxn(depth=2)}\n"
+
+        if self._track_time:
+            self._start = time.time()
+
         return self
-        
+
+
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self._logger.info("{:%Y-%m-%d %H:%M:%S} EXIT: {}".format(datetime.datetime.now(), get_fxn_name(depth=2)))
-    
-    def write(self, level, msg):
-        self._logger.log(level=level, msg=msg)
-    
-class MyTimer():
-    """Context manager for measuring execution time.
-    
-    """
-    
-    def __init__(self):
-        pass
+        if self._track_time:
+            self._end = time.time()
+            self._output += f"function time: {self._end - self._start} seconds\n"
+
+        self._output += f"{fg_timestamp(False)} - [EXIT] fxn name: {g_fxn(depth=2)}\n"
+
+        if self._file is not None:
+            self._logger.info(self._output)
+        else:
+            print(self._output)
+
+
+    def write(self, msg, cr=True):
+        """Add to the output message.
         
-    def __enter__(self):
-        format_title(title=get_fxn_name(depth=2), should_print=True)
-        self._start = time.time()
-    
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self._end = time.time()
-        print("function time: {} seconds".format(self._end - self._start))
+        Args:
+            msg: message to add (str)
+            cr: carriage return at end (bool)
+        Returns:
+            None
+        """
         
+        self._output += (msg + ("\n" if cr else ""))
+
+
 #~~~~  PRIVATE FUNCTIONS  ~~~~#
 
 #~~~~  PUBLIC FUNCTIONS  ~~~~#
-def format_title(title: str, should_print=False) -> str:
+def f_title(title, cr=True):
     """Format a title.
     
     Args:
         title: heading (str)
+        cr: carriage return at end (bool)
     Returns:
-        result: formatted title (str)
+        formatted title (str)
     """
+
+    return title.upper() + "\n" + ("=" * len(title)) + ("\n" if cr else "")
+
+
+def fg_args(cr=True):
+    """Get/format the script arguments.
     
-    title_length = len(title)
-    result = "\n" + title.upper() + "\n"
-    for i in range(title_length):
-        result += "-"
+    Args:
+        N/A
+    Returns:
+        script args (str)
+    """
+
+    args = "".join([f"{i}: {j}\n" for i, j in enumerate(sys.argv[1:], 1)])
     
-    if should_print is False:
-        return result
+    if cr:
+        return args
     else:
-        print(result)
-    
-def format_script_args() -> str:
-    """Format script arguments.
+        return args[:-1]
+
+
+def fg_timestamp(cr=True):
+    """Get/format the timestamp.
     
     Args:
-        None
+        cr: carriage return at end (bool)
     Returns:
-        result: formatted script args (str)
+        timestamp (str)
     """
-    
-    result = ""
-    for index, arg in enumerate(sys.argv[1:], 1):
-        result += "{}: {}\n".format(index, arg)
-    
-    return result
 
-def create_timestamp(output_file_path):
-    """Add a formatted timestamp to a file.
+    return f"{datetime.datetime.now():%Y-%m-%d %H:%M:%S}" + ("\n" if cr else "")
+
+
+def g_fxn(depth=1):
+    """Get the calling function name.
     
     Args:
-        output_file_path: test result file path (str)
+        depth: caller function depth in the call stack (int)
     Returns:
-        result: N/A (ResultObject)
+        caller function (str)
     """
-    
-    result = ResultObject()
-    
-    try:
-        with open(output_file_path, "a") as f:
-            f.write("{:%Y-%m-%d %H:%M:%S}\n".format(datetime.datetime.now()))
-            result.set_status(1)
-            result.set_message("create_timestamp: SUCCESS")            
-    except Exception as e:
-        result.set_status(0)
-        result.set_message("create_timestamp: FAILURE")
-        result.add_debug("Exception message: {}".format(repr(e)))
-        
-    return result
 
-def get_fxn_name(depth=1, should_print=False):
-    if should_print is True:
-        print(sys._getframe(depth).f_code.co_name)
-    
     return sys._getframe(depth).f_code.co_name
-        
-def result_handler(result_obj):
-    """Handle the return of a ResultObject.
-    
-    Args:
-        result_obj: (ResultObject)
-    Returns:
-        
-    """
-    
-    None
+
 
 #~~~~  MAIN  ~~~~#
-
+def test():
+    with LoggerAndTimer() as f:
+        f.write("hi")
+        
+if __name__ == "__main__":
+    test()
 #~~~~  DEAD CODE  ~~~~#
