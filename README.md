@@ -5,21 +5,27 @@ The purpose of this repo is to learn Python, gather relevant material, and demon
 Tutorial: Python    
 https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing
 
-Book: Mastering Regular Expressions   
+### Books
+Mastering Regular Expressions   
 https://docs.google.com/document/d/1MbnAatOB-_yAywDYGnDaEZvM1gAYaqx58GeiNkDU45Q/edit?usp=sharing
 
-Book: Mastering Python Regular Expressions   
+Mastering Python Regular Expressions   
 https://docs.google.com/document/d/1JmcUhUAU931DChaZmzx8d2o4Y-ShLga7ewUc3LlCYKM/edit?usp=sharing
 
-## Interesting Modules
-glob  
-https://docs.python.org/2/library/glob.html#module-glob   
+Automate The Boring Stuff With Python  
+https://docs.google.com/document/d/1KIOKAK84k_Du6d7LLbk-iSXy7LoaReREdopfZLwTy64/edit?usp=sharing
 
-elementtree   
-https://docs.python.org/2/library/xml.etree.elementtree.html  
+### Libraries
+itertools  
+https://docs.google.com/document/d/1Y8HvskURUP5ZZObJhoX7FP7H4LGarUfk0q-64FK9TRA/edit?usp=sharing
+
+bs4  
+https://docs.google.com/document/d/1fNbN_tujBCutBBhBlFBkJX5vVON8CRQvwAINGiJJ1M8/edit?usp=sharing
+
+## Interesting Modules
+glob , elementtree   
 
 regex   
-https://docs.python.org/2/howto/regex.html#regular-expression-howto   
 http://www.regular-expressions.info/lookaround.html   
 http://www.rexegg.com/regex-lookarounds.html    
 
