@@ -8,8 +8,7 @@ The purpose of this repo is to learn Python, gather relevant material, and demon
 [Mastering Python Regular Expressions](https://docs.google.com/document/d/1JmcUhUAU931DChaZmzx8d2o4Y-ShLga7ewUc3LlCYKM/edit?usp=sharing)    
 [Automate The Boring Stuff With Python](https://docs.google.com/document/d/1KIOKAK84k_Du6d7LLbk-iSXy7LoaReREdopfZLwTy64/edit?usp=sharing)   
 ## Library Notes
-[itertools](https://docs.google.com/document/d/1Y8HvskURUP5ZZObJhoX7FP7H4LGarUfk0q-64FK9TRA/edit?usp=sharing)   
-[bs4](https://docs.google.com/document/d/1fNbN_tujBCutBBhBlFBkJX5vVON8CRQvwAINGiJJ1M8/edit?usp=sharing)
+[Google Drive Folder](https://drive.google.com/open?id=1A9RBgQltqIcDBhOQRwr8GmJ7WT5PBxGW)
 ## Misc Notes
 ### Interesting Modules
 glob , elementtree   
