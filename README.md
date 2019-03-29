@@ -1,4 +1,4 @@
-# Python Repo Notes
+# Repo README
 ## Purpose
 The purpose of this repo is to learn Python, gather relevant material, and demonstrate my progress.
 ## Subject Notes
