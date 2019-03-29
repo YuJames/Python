@@ -1,28 +1,17 @@
 # Python Repo Notes
 ## Purpose
 The purpose of this repo is to learn Python, gather relevant material, and demonstrate my progress.
-## Notes
-Tutorial: Python    
-https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing
-
-### Books
-Mastering Regular Expressions   
-https://docs.google.com/document/d/1MbnAatOB-_yAywDYGnDaEZvM1gAYaqx58GeiNkDU45Q/edit?usp=sharing
-
-Mastering Python Regular Expressions   
-https://docs.google.com/document/d/1JmcUhUAU931DChaZmzx8d2o4Y-ShLga7ewUc3LlCYKM/edit?usp=sharing
-
-Automate The Boring Stuff With Python  
-https://docs.google.com/document/d/1KIOKAK84k_Du6d7LLbk-iSXy7LoaReREdopfZLwTy64/edit?usp=sharing
-
-### Libraries
-itertools  
-https://docs.google.com/document/d/1Y8HvskURUP5ZZObJhoX7FP7H4LGarUfk0q-64FK9TRA/edit?usp=sharing
-
-bs4  
-https://docs.google.com/document/d/1fNbN_tujBCutBBhBlFBkJX5vVON8CRQvwAINGiJJ1M8/edit?usp=sharing
-
-## Interesting Modules
+## Subject Notes
+[Tutorial: Python](https://docs.google.com/document/d/12qpKtSAz9k-i0DHTp5Gv1SUEh9rWtY3O9mrZf5NvZbY/edit?usp=sharing)
+## Book Notes
+[Mastering Regular Expressions](https://docs.google.com/document/d/1MbnAatOB-_yAywDYGnDaEZvM1gAYaqx58GeiNkDU45Q/edit?usp=sharing)   
+[Mastering Python Regular Expressions](https://docs.google.com/document/d/1JmcUhUAU931DChaZmzx8d2o4Y-ShLga7ewUc3LlCYKM/edit?usp=sharing)    
+[Automate The Boring Stuff With Python](https://docs.google.com/document/d/1KIOKAK84k_Du6d7LLbk-iSXy7LoaReREdopfZLwTy64/edit?usp=sharing)   
+## Library Notes
+[itertools](https://docs.google.com/document/d/1Y8HvskURUP5ZZObJhoX7FP7H4LGarUfk0q-64FK9TRA/edit?usp=sharing)   
+[bs4](https://docs.google.com/document/d/1fNbN_tujBCutBBhBlFBkJX5vVON8CRQvwAINGiJJ1M8/edit?usp=sharing)
+## Misc Notes
+### Interesting Modules
 glob , elementtree   
 
 regex   
@@ -33,7 +22,7 @@ tkinter
 http://www.tutorialspoint.com/python/python_gui_programming.htm   
 http://effbot.org/tkinterbook/tkinter-index.htm#introduction    
 
-## Interesting Info   
+### Interesting Info   
 exec    
 http://lucumr.pocoo.org/2011/2/1/exec-in-python/      
 
@@ -70,5 +59,4 @@ https://docs.python.org/3.5/howto/functional.html
 
 super()   
 https://rhettinger.wordpress.com/2011/05/26/super-considered-super/
-
-## Explore Later    
+### Explore Later    
